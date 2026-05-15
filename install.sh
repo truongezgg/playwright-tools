@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Playwright Tools Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/playwright-tools/main/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
 
 set -e
 
-REPO_URL="https://github.com/YOUR_USERNAME/playwright-tools"
+REPO_URL="https://github.com/truongezgg/playwright-tools"
 INSTALL_DIR="$HOME/.playwright-tools"
 
 echo "Installing Playwright Tools..."

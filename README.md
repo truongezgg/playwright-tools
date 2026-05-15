@@ -12,10 +12,28 @@ CLI tools for web search and page fetching with stealth browser support.
 
 ## Quick Start
 
-```bash
-# Install
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/playwright-tools/main/install.sh | bash
+### Install
 
+```bash
+# Option 1: npm global install (recommended)
+npm install -g git+ssh://git@github.com:truongezgg/playwright-tools.git
+
+# Option 2: npm via HTTPS
+npm install -g git+https://github.com/truongezgg/playwright-tools.git
+
+# Option 3: curl installer
+curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
+```
+
+### Update
+
+```bash
+npm update -g playwright-tools
+```
+
+### Usage
+
+```bash
 # Search
 pt-search ddg "query" 5
 pt-search google "query" 10
@@ -26,7 +44,11 @@ pt-fetch https://example.com
 
 ## Stealth Server (Optional)
 
-For better stealth (no CAPTCHAs), run a browser server in Docker:
+For better stealth (no CAPTCHAs), run a CloakBrowser server.
+
+> **Security Note:** CloakBrowser is an open-source project. Running it in Docker is recommended for isolation. Use at your own risk.
+
+### Docker (Recommended)
 
 ```bash
 # Start server
@@ -34,9 +56,25 @@ docker-compose up -d
 
 # CLI auto-connects to localhost:9222
 pt-search ddg "query" 5
+pt-search google "query" 5
+pt-fetch https://example.com
 
-# Force local browser (for CAPTCHA solving)
-pt-search ddg "query" 5 --no-cloak
+# Stop server
+docker-compose down
+```
+
+### Local (Alternative)
+
+```bash
+# Install cloakbrowser
+npm install cloakbrowser
+
+# Start server on port 9222
+npm run server
+# or
+node server.js 9222
+
+# Stop: Ctrl+C
 ```
 
 ## Commands
@@ -105,7 +143,7 @@ Options:
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/playwright-tools.git
+git clone https://github.com/truongezgg/playwright-tools.git
 cd playwright-tools
 
 # Install

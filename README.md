@@ -92,7 +92,10 @@ pt fetch https://example.com --snapshot
 Run [CloakBrowser](https://github.com/CloakHQ/cloakbrowser) in Docker for Google/Bing without CAPTCHA:
 
 ```bash
-cd ~/.playwright-tools
+# Option 1: docker run
+docker run -d -p 9222:9222 cloakhq/cloakbrowser cloakserve
+
+# Option 2: docker compose (from playwright-tools directory)
 docker compose up -d
 ```
 

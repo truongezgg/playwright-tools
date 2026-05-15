@@ -36,7 +36,7 @@ chmod +x "$INSTALL_DIR/bin/pt.js"
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
-  export PATH="$HOME/.local/bin:$PATH
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
 echo ""

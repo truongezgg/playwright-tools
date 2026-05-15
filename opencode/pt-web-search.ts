@@ -21,7 +21,8 @@ Usage notes:
   },
   async execute(args) {
     try {
-      const result = await Bun.$`pt search ${args.engine} ${args.query} ${args.count.toString()}`.text()
+      const count = (args.count || 5).toString()
+      const result = await Bun.$`pt search ${args.engine} ${args.query} ${count}`.text()
       return result.trim()
     } catch (error: any) {
       const stderr = error.stderr?.toString() || ""

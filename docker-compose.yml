@@ -3,8 +3,13 @@ services:
     image: cloakhq/cloakbrowser
     command: cloakserve
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1560MB
+          cpus: "2.0"
     ports:
-      - "127.0.0.1:9222:9222"
+      - "9222:9222"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
       interval: 30s

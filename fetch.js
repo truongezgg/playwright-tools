@@ -8,7 +8,7 @@ const params = args.filter(a => !a.startsWith('--'));
 
 const url = params[0];
 
-const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || 'http://localhost:9222';
+const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || process.env.PT_CDP_URL || 'http://localhost:9222';
 const noCloak = flags.includes('--no-cloak');
 const useSnapshot = flags.includes('--snapshot');
 const rawSnapshot = flags.includes('--rawsnapshot');

@@ -1,4 +1,5 @@
 import { tool } from "@opencode-ai/plugin"
+import { execSync } from "child_process"
 
 export default tool({
   description: `Search the web using DuckDuckGo, Google, or Bing via real browser.
@@ -17,12 +18,10 @@ Example:
   async execute(args) {
     try {
       const limit = (args.limit || 5).toString()
-      const result = await Bun.$`pt search ${args.engine} ${args.query} ${limit}`.text()
+      const result = execSync(`pt search ${args.engine} ${args.query} ${limit}`, { encoding: "utf8" })
       return result.trim()
     } catch (error: any) {
-      const stderr = error.stderr?.toString() || ""
-      const stdout = error.stdout?.toString() || ""
-      return `Search failed (exit ${error.exitCode}): ${stderr || stdout || error.message}`
+      return `Search failed: ${error.message}`
     }
   },
 })

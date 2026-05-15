@@ -1,4 +1,5 @@
 import { tool } from "@opencode-ai/plugin"
+import { execSync } from "child_process"
 
 export default tool({
   description: `Fetch web page content using a real browser with JavaScript rendering.
@@ -22,12 +23,11 @@ Example:
       if (args.selector) flags.push(`--selector=${args.selector}`)
       if (args.format && args.format !== 'markdown') flags.push(`--format=${args.format}`)
       if (args.snapshot) flags.push("--snapshot")
-      const result = await Bun.$`pt fetch ${args.url} ${flags}`.text()
+      const cmd = `pt fetch ${args.url} ${flags.join(' ')}`
+      const result = execSync(cmd, { encoding: "utf8" })
       return result.trim()
     } catch (error: any) {
-      const stderr = error.stderr?.toString() || ""
-      const stdout = error.stdout?.toString() || ""
-      return `Fetch failed (exit ${error.exitCode}): ${stderr || stdout || error.message}`
+      return `Fetch failed: ${error.message}`
     }
   },
 })

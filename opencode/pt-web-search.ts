@@ -20,7 +20,13 @@ Usage notes:
     count: tool.schema.number().describe("Number of results to return (default: 5)").default(5),
   },
   async execute(args) {
-    const result = await Bun.$`pt search ${args.engine} ${args.query} ${args.count.toString()}`.text()
-    return result.trim()
+    try {
+      const result = await Bun.$`pt search ${args.engine} ${args.query} ${args.count.toString()}`.text()
+      return result.trim()
+    } catch (error: any) {
+      const stderr = error.stderr?.toString() || ""
+      const stdout = error.stdout?.toString() || ""
+      return `Search failed (exit ${error.exitCode}): ${stderr || stdout || error.message}`
+    }
   },
 })

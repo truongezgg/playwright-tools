@@ -3,30 +3,31 @@
 # Playwright Tools Updater
 #
 # Usage:
-#   pt-update
+#   pt update
 
 set -e
 
 INSTALL_DIR="$HOME/.playwright-tools"
 SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 
-if [ ! -d "$INSTALL_DIR" ]; then
-  echo "Playwright Tools not installed at $INSTALL_DIR"
-  echo "Install first: curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash"
-  exit 1
+if [ -d "$INSTALL_DIR" ]; then
+  # curl install: git pull
+  echo "Updating Playwright Tools (git)..."
+  cd "$INSTALL_DIR"
+  git pull --quiet
+  npm install --production --quiet
+else
+  # npm -g install: reinstall
+  echo "Updating Playwright Tools (npm)..."
+  npm install -g git+https://github.com/truongezgg/playwright-tools.git
 fi
 
-echo "Updating Playwright Tools..."
-
-cd "$INSTALL_DIR"
-git pull --quiet
-npm install --production --quiet
-
 # Update skill
-echo "Updating skill..."
-rm -rf "$SKILL_DIR/playwright-tools"
-cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then
+  echo "Updating skill..."
+  mkdir -p "$SKILL_DIR"
+  rm -rf "$SKILL_DIR/playwright-tools"
+  cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+fi
 
-echo "Done! Updated:"
-echo "  CLI:    pt-search, pt-fetch"
-echo "  Skill:  $SKILL_DIR/playwright-tools/SKILL.md"
+echo "Done! Updated."

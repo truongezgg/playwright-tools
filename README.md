@@ -10,6 +10,24 @@ CLI tools for web search and page fetching with stealth browser support.
 - **Ad filtering** for search results
 - **No vendor lock-in** — works with any CDP-compatible browser server
 
+## Test Results (Verified)
+
+| Engine | Headless | Headed | CloakBrowser |
+|--------|----------|--------|--------------|
+| DuckDuckGo | OK | OK | OK |
+| Google | BLOCKED | OK | OK |
+| Bing | BLOCKED | OK | OK |
+| Fetch pages | OK | OK | OK |
+
+- **Headless**: System Chrome, no visible browser
+- **Headed**: System Chrome, visible browser (user can solve CAPTCHA)
+- **CloakBrowser**: Stealth server via Docker
+
+**Recommendations:**
+- DDG: Use headless (fast, no interaction)
+- Google/Bing: Use CloakBrowser or headed mode
+- Fetch: Headless works for most sites
+
 ## Quick Start
 
 ### Install

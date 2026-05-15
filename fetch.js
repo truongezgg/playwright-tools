@@ -91,13 +91,16 @@ try {
   // DOM extraction
   const extractFn = (sel) => {
     if (sel) {
-      // Selector mode
+      // Selector mode - try to find element
       const el = document.querySelector(sel);
-      if (!el) return { error: `Element not found: ${sel}` };
-      return {
-        html: el.innerHTML,
-        text: el.innerText,
-      };
+      if (el) {
+        return {
+          html: el.innerHTML,
+          text: el.innerText,
+        };
+      }
+      // Selector not found - return null to trigger fallback to full page
+      return { found: false, selector: sel };
     }
     // Default: find main content area
     const article = document.querySelector('article');
@@ -112,10 +115,22 @@ try {
 
   const extracted = await page.evaluate(extractFn, selector);
 
-  if (extracted.error) {
-    await closeBrowser(browser, source);
-    errorResponse(extracted.error);
-    process.exit(1);
+  // If selector was specified but element not found, fallback to full page
+  if (selector && !extracted.found) {
+    console.error(`Selector "${selector}" not found, using full page`);
+    const fallbackFn = () => {
+      const article = document.querySelector('article');
+      const main = document.querySelector('main');
+      const contentEl = document.querySelector('.content, .markdown, #content');
+      const target = article || main || contentEl || document.body;
+      return {
+        html: target?.innerHTML || '',
+        text: target?.innerText || '',
+      };
+    };
+    const fallback = await page.evaluate(fallbackFn);
+    extracted.html = fallback.html;
+    extracted.text = fallback.text;
   }
 
   let content;

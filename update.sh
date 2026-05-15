@@ -11,10 +11,12 @@ INSTALL_DIR="$HOME/.playwright-tools"
 SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 
 if [ -d "$INSTALL_DIR" ]; then
-  # curl install: git pull
+  # curl install: git pull (stash local changes first)
   echo "Updating Playwright Tools (git)..."
   cd "$INSTALL_DIR"
+  git stash --quiet 2>/dev/null || true
   git pull --quiet
+  git stash pop --quiet 2>/dev/null || true
   npm install --production --quiet
 else
   # npm -g install: reinstall

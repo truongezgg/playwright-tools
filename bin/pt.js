@@ -45,8 +45,8 @@ Search Options:
   --headless      No browser window
   --cdp URL       CDP server URL (default: http://localhost:9222)
   --no-cloak      Skip CDP, use local browser
-  --eval          JavaScript extraction (fast, default)
-  --snapshot      Accessibility tree extraction (stable)
+  --eval          JavaScript extraction (default)
+  --snapshot      Accessibility tree (local browser only)
   --rawsnapshot   Raw YAML output
 
 Fetch Options:

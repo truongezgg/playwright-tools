@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
-import { parseSnapshot } from './lib/snapshot.js';
+import { parseSnapshot, snapshotToYaml } from './lib/snapshot.js';
 
 const args = process.argv.slice(2);
 const flags = args.filter(a => a.startsWith('--'));
@@ -35,7 +35,7 @@ const urls = {
 
 const selectors = {
   ddg: { container: 'article' },
-  google: { container: '.tF2Cxc' },
+  google: { container: 'h3' },
   bing: { container: 'li.b_algo' },
 };
 
@@ -73,13 +73,23 @@ const evalCode = {
     .slice(0, ${count});
   })()`,
   google: `(() => {
-    return [...document.querySelectorAll('.tF2Cxc')].map(el => ({
-      title: el.querySelector('h3')?.innerText?.trim(),
-      link: el.querySelector('a')?.href,
-      snippet: el.querySelector('.VwiC3b, .IsZvec, [data-sncf]')?.innerText?.trim() || '',
-    }))
-    .filter(r => r.title)
-    .slice(0, ${count});
+    const seen = new Set();
+    const containers = document.querySelectorAll('div[data-hveid]');
+    const results = [];
+    for (const c of containers) {
+      const h3 = c.querySelector('h3');
+      if (!h3) continue;
+      const a = h3.closest('a');
+      if (!a) continue;
+      if (seen.has(a.href)) continue;
+      seen.add(a.href);
+      results.push({
+        title: h3.innerText?.trim(),
+        link: a.href,
+        snippet: c.querySelector('[data-sncf]')?.innerText?.trim() || '',
+      });
+    }
+    return results.slice(0, ${count});
   })()`,
   bing: `(() => {
     return [...document.querySelectorAll('li.b_algo')].map(el => ({
@@ -165,14 +175,12 @@ try {
     }
     results = await page.evaluate(evalCode[engine]);
   } else {
-    // Snapshot mode (default when available)
+    // Snapshot mode (only works with local Playwright, not CDP)
     console.error('Using snapshot mode...');
     try {
       const snapshot = await page.accessibility.snapshot();
-      const yaml = JSON.stringify(snapshot);
-      // Snapshot parsing for CDP requires YAML format
-      // For now, fallback to eval
-      results = await page.evaluate(evalCode[engine]);
+      const yaml = snapshotToYaml(snapshot);
+      results = parseSnapshot(yaml, engine, count);
     } catch (e) {
       console.error('Snapshot failed, using eval mode...');
       results = await page.evaluate(evalCode[engine]);

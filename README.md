@@ -27,7 +27,7 @@ npx skills add https://github.com/truongezgg/playwright-tools
 ## Usage
 
 ```bash
-pt search ddg "seavoca" 5
+pt search ddg "reactjs" 5
 pt search google "next.js" 10 --headed
 pt fetch https://example.com
 pt update
@@ -35,21 +35,21 @@ pt update
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
+| Command                              | Description              |
+| ------------------------------------ | ------------------------ |
 | `pt search <engine> <query> [count]` | Search DDG, Google, Bing |
-| `pt fetch <url>` | Fetch page content |
-| `pt update` | Update to latest version |
-| `pt --help` | Show help |
-| `pt --version` | Show version |
+| `pt fetch <url>`                     | Fetch page content       |
+| `pt update`                          | Update to latest version |
+| `pt --help`                          | Show help                |
+| `pt --version`                       | Show version             |
 
 ### Search Engines
 
-| Engine | Headless | Headed | CDP Server |
-|--------|----------|--------|------------|
-| DuckDuckGo | OK | OK | OK |
-| Google | blocked | OK | OK |
-| Bing | blocked | OK | OK |
+| Engine     | Headless | Headed | CDP Server |
+| ---------- | -------- | ------ | ---------- |
+| DuckDuckGo | OK       | OK     | OK         |
+| Google     | blocked  | OK     | OK         |
+| Bing       | blocked  | OK     | OK         |
 
 ```bash
 pt search ddg "query" 5              # Headless, fast
@@ -67,17 +67,17 @@ pt fetch https://example.com --snapshot
 
 ## Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--headed` | Visible browser | auto |
-| `--headless` | No browser window | auto |
-| `--cdp URL` | CDP server | `localhost:9222` |
-| `--no-cloak` | Skip CDP | false |
-| `--eval` | JavaScript extraction | default |
-| `--snapshot` | Accessibility tree | - |
-| `--rawsnapshot` | Raw YAML | - |
-| `--selector CSS` | Extract element (fetch) | - |
-| `--timeout MS` | Load timeout (fetch) | `15000` |
+| Flag             | Description             | Default          |
+| ---------------- | ----------------------- | ---------------- |
+| `--headed`       | Visible browser         | auto             |
+| `--headless`     | No browser window       | auto             |
+| `--cdp URL`      | CDP server              | `localhost:9222` |
+| `--no-cloak`     | Skip CDP                | false            |
+| `--eval`         | JavaScript extraction   | default          |
+| `--snapshot`     | Accessibility tree      | -                |
+| `--rawsnapshot`  | Raw YAML                | -                |
+| `--selector CSS` | Extract element (fetch) | -                |
+| `--timeout MS`   | Load timeout (fetch)    | `15000`          |
 
 ## Stealth Server
 
@@ -100,20 +100,20 @@ CLI auto-connects to `localhost:9222`.
 
 **Extraction modes:**
 
-| Mode | Flag | Stability | Speed |
-|------|------|-----------|-------|
-| Eval | `--eval` | Low | Fast |
-| Snapshot | `--snapshot` | High | Medium |
+| Mode     | Flag         | Stability | Speed  |
+| -------- | ------------ | --------- | ------ |
+| Eval     | `--eval`     | Low       | Fast   |
+| Snapshot | `--snapshot` | High      | Medium |
 
 ## Why This Exists
 
-| Problem | This tool |
-|---------|-----------|
-| `WebSearch` rate-limited | Real browser |
-| `WebFetch` returns 502/403 | JavaScript rendering |
-| Google shows CAPTCHA | CDP stealth server |
-| CSS selectors break | Snapshot mode |
-| Vendor lock-in | Only `playwright-core`, standard CDP |
+| Problem                    | This tool                            |
+| -------------------------- | ------------------------------------ |
+| `WebSearch` rate-limited   | Real browser                         |
+| `WebFetch` returns 502/403 | JavaScript rendering                 |
+| Google shows CAPTCHA       | CDP stealth server                   |
+| CSS selectors break        | Snapshot mode                        |
+| Vendor lock-in             | Only `playwright-core`, standard CDP |
 
 ## License
 

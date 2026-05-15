@@ -5,13 +5,8 @@ export default tool({
 - Uses stealth browser to bypass bot detection (Cloudflare, etc.)
 - Renders JavaScript before extracting content
 - Use this tool when the built-in webfetch tool fails (502, 403, empty response)
-- Use this tool for sites that require JavaScript rendering
 
-Usage notes:
-  - Returns page text content by default
-  - Can extract specific elements via CSS selector
-  - Supports accessibility tree extraction for stable parsing
-  - This tool is read-only and does not modify any files`,
+Example: url="https://example.com" selector="article"`,
   args: {
     url: tool.schema.string().describe("URL to fetch"),
     selector: tool.schema.string().optional().describe("CSS selector to extract specific element (optional)"),

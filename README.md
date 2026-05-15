@@ -105,6 +105,34 @@ CLI auto-connects to `localhost:9222`.
 | Eval     | `--eval`     | Low       | Fast   |
 | Snapshot | `--snapshot` | High      | Medium |
 
+## OpenCode Integration
+
+Custom tools for [OpenCode](https://opencode.ai) are in the `opencode/` directory.
+
+**Install:**
+
+```bash
+# Copy tools to your project's .opencode/tools/ directory
+cp opencode/pt-web-search.ts your-project/.opencode/tools/
+cp opencode/pt-web-fetch.ts your-project/.opencode/tools/
+```
+
+Or symlink:
+
+```bash
+ln -s $(pwd)/opencode/pt-web-search.ts your-project/.opencode/tools/
+ln -s $(pwd)/opencode/pt-web-fetch.ts your-project/.opencode/tools/
+```
+
+**Tools:**
+
+| Tool | Description |
+|------|-------------|
+| `pt-web-search` | Search DDG, Google, Bing via stealth browser |
+| `pt-web-fetch` | Fetch pages with JS rendering, bypass bot detection |
+
+These tools wrap the `pt` CLI and are available alongside OpenCode's built-in tools.
+
 ## Why This Exists
 
 | Problem                    | This tool                            |

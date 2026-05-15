@@ -32,7 +32,8 @@ npm install --production --quiet
 mkdir -p "$HOME/.local/bin"
 ln -sf "$INSTALL_DIR/search.js" "$HOME/.local/bin/pt-search"
 ln -sf "$INSTALL_DIR/fetch.js" "$HOME/.local/bin/pt-fetch"
-chmod +x "$INSTALL_DIR/search.js" "$INSTALL_DIR/fetch.js"
+ln -sf "$INSTALL_DIR/update.sh" "$HOME/.local/bin/pt-update"
+chmod +x "$INSTALL_DIR/search.js" "$INSTALL_DIR/fetch.js" "$INSTALL_DIR/update.sh"
 
 # Add to PATH if needed
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then

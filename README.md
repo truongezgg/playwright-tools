@@ -17,7 +17,7 @@ This installs:
 To update:
 
 ```bash
-cd ~/.playwright-tools && git pull && npm install --production
+pt-update
 ```
 
 ## Commands

@@ -1,6 +1,6 @@
 ---
 name: playwright-tools
-description: Use when needing to search the web or fetch pages that WebFetch cannot access (502, 403, blocked). Supports stealth browser via CDP server.
+description: Use when WebFetch fails (502, 403, blocked) or need to search the web. CLI tools with stealth browser support.
 ---
 
 # Playwright Tools
@@ -11,51 +11,39 @@ CLI tools for web search and page fetching with stealth browser support.
 
 | Command | Purpose |
 |---------|---------|
-| `pt-search` | Search engines (DDG, Google, Bing) |
+| `pt-search` | Search DDG, Google, Bing |
 | `pt-fetch` | Fetch page content |
+
+## Test Results
+
+| Engine | Headless | Headed | CloakBrowser |
+|--------|----------|--------|--------------|
+| DuckDuckGo | OK | OK | OK |
+| Google | BLOCKED | OK | OK |
+| Bing | BLOCKED | OK | OK |
+| Fetch pages | OK | OK | OK |
+
+## Recommendations
+
+| Task | Command |
+|------|---------|
+| Quick search | `pt-search ddg "query" 5` |
+| Google/Bing search | `pt-search google "query" 5` (opens browser, solve CAPTCHA if needed) |
+| Fetch blocked page | `pt-fetch https://example.com` |
+| Stealth mode | Start CloakBrowser server first |
 
 ## Quick Start
 
 ```bash
-# Search
+# Search DuckDuckGo (headless, no CAPTCHA)
 pt-search ddg "query" 5
-pt-search google "query" 10
-pt-search bing "query" 3
 
-# Fetch page
-pt-fetch https://example.com
-pt-fetch https://example.com --snapshot
+# Search Google (headed, may need CAPTCHA)
+pt-search google "query" 5
+
+# Fetch page (when WebFetch fails)
+pt-fetch https://docs.ton.org/standard/tokens/jettons/overview
 ```
-
-## Modes
-
-### Browser Connection (Priority)
-
-1. **CDP Server** (stealth) — connects to `localhost:9222`
-2. **Local Playwright** — fallback, may need CAPTCHA
-
-```bash
-# Start stealth server (Docker)
-docker-compose up -d
-
-# CLI auto-connects to server
-pt-search ddg "query" 5  # Uses stealth server
-
-# Force local browser
-pt-search ddg "query" 5 --no-cloak
-```
-
-### Data Extraction
-
-| Mode | Flag | Stability | Output |
-|------|------|-----------|--------|
-| **Default** | (none) | Medium | JSON |
-| **Snapshot** | `--snapshot` | High | Structured text |
-| **Raw Snapshot** | `--rawsnapshot` | High | YAML tree |
-| **Eval** | `--eval` | Low | JSON |
-
-**Default mode:** Uses eval (fast, CSS selectors).
-**Snapshot mode:** Uses accessibility tree (stable, semantic structure).
 
 ## Options
 
@@ -64,13 +52,18 @@ pt-search ddg "query" 5 --no-cloak
 ```
 pt-search [engine] [query] [count] [options]
 
+Engines: ddg, google, bing
+
 Options:
   --cdp URL       CDP server URL (default: http://localhost:9222)
-  --no-cloak      Force local Playwright
-  --eval          Use eval mode
+  --no-cloak      Force local browser (no CDP)
+  --eval          Use eval mode (fast, CSS selectors)
   --rawsnapshot   Output raw snapshot YAML
-  --headless      Headless mode for local browser
+  --headless      Force headless mode
+  --headed        Force headed mode (for CAPTCHA solving)
 ```
+
+**Default mode:** DDG = headless, Google/Bing = headed (they block headless)
 
 ### pt-fetch
 
@@ -79,12 +72,24 @@ pt-fetch [url] [options]
 
 Options:
   --cdp URL       CDP server URL
-  --no-cloak      Force local Playwright
+  --no-cloak      Force local browser
   --snapshot       Output accessibility tree
   --rawsnapshot    Output raw snapshot YAML
   --selector CSS   Extract specific element
   --headless       Headless mode
   --timeout MS     Page load timeout (default: 15000)
+```
+
+## Stealth Server (Optional)
+
+For Google/Bing without CAPTCHA, run CloakBrowser server:
+
+```bash
+# Docker (recommended)
+docker compose up -d
+
+# CLI auto-connects to localhost:9222
+pt-search google "query" 5  # No CAPTCHA needed
 ```
 
 ## When to Use
@@ -103,25 +108,26 @@ Options:
 ## Installation
 
 ```bash
-# Install CLI
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/playwright-tools/main/install.sh | bash
+# npm global install
+npm install -g git+ssh://git@github.com:truongezgg/playwright-tools.git
 
-# Optional: Start stealth server
-docker-compose up -d
+# or via HTTPS
+npm install -g git+https://github.com/truongezgg/playwright-tools.git
 ```
 
 ## Examples
 
 ```bash
-# Search with stealth server
+# Quick DDG search (headless, fast)
 pt-search ddg "cloakbrowser" 5
 
 # Fetch page that WebFetch failed
 pt-fetch https://docs.ton.org/standard/tokens/jettons/overview
 
-# Get raw snapshot for debugging
-pt-search ddg "query" 3 --rawsnapshot
+# Search Google with stealth server
+docker compose up -d
+pt-search google "next.js security" 10
 
-# Force local browser (for CAPTCHA solving)
-pt-search google "query" 5 --no-cloak
+# Force headed mode for CAPTCHA solving
+pt-search bing "query" 5 --headed
 ```

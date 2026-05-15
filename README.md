@@ -11,7 +11,7 @@ curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/ins
 ```
 
 This installs:
-- **CLI:** `pt`, `pt-search`, `pt-fetch`
+- **CLI:** `pt`
 - **Agent skill:** `~/.agents/skills/playwright-tools/`
 
 ## Usage
@@ -21,14 +21,6 @@ pt search ddg "seavoca" 5
 pt search google "next.js" 10 --headed
 pt fetch https://example.com
 pt update
-```
-
-Or use standalone commands:
-
-```bash
-pt-search ddg "query" 5
-pt-fetch https://example.com
-pt-update
 ```
 
 ## Commands

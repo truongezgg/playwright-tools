@@ -31,10 +31,7 @@ npm install --production --quiet
 # Create CLI symlinks
 mkdir -p "$HOME/.local/bin"
 ln -sf "$INSTALL_DIR/bin/pt.js" "$HOME/.local/bin/pt"
-ln -sf "$INSTALL_DIR/search.js" "$HOME/.local/bin/pt-search"
-ln -sf "$INSTALL_DIR/fetch.js" "$HOME/.local/bin/pt-fetch"
-ln -sf "$INSTALL_DIR/update.sh" "$HOME/.local/bin/pt-update"
-chmod +x "$INSTALL_DIR/bin/pt.js" "$INSTALL_DIR/search.js" "$INSTALL_DIR/fetch.js" "$INSTALL_DIR/update.sh"
+chmod +x "$INSTALL_DIR/bin/pt.js"
 
 # Add to PATH if needed
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -51,12 +48,12 @@ cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
 
 echo ""
 echo "Done! Installed:"
-echo "  CLI:    pt-search, pt-fetch"
+echo "  CLI:    pt"
 echo "  Skill:  $SKILL_DIR/playwright-tools/SKILL.md"
 echo ""
 echo "Usage:"
-echo "  pt-search ddg \"query\" 5"
-echo "  pt-fetch https://example.com"
+echo "  pt search ddg \"query\" 5"
+echo "  pt fetch https://example.com"
 echo ""
 echo "Optional: Start stealth server for Google/Bing without CAPTCHA:"
 echo "  cd $INSTALL_DIR && docker compose up -d"

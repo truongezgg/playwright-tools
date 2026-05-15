@@ -132,9 +132,10 @@ try {
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
   console.error(`Searching ${engine}: "${query}"`);
 
-  // Wait for results
+  // Wait for results (longer timeout for Google/Bing - they may show CAPTCHA)
+  const waitTimeout = engine === 'ddg' ? 10000 : 20000;
   try {
-    await page.waitForSelector(sel.container, { timeout: 10000 });
+    await page.waitForSelector(sel.container, { timeout: waitTimeout });
   } catch (e) {
     // Check for CAPTCHA
     const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 500) || '');

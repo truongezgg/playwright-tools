@@ -5,14 +5,14 @@ description: Use when WebFetch fails (502, 403, blocked) or need to search the w
 
 # Playwright Tools
 
-CLI tools for web search and page fetching with stealth browser support.
+CLI tools for web search and page fetching when standard tools fail.
 
-## Commands
+## Tools
 
-| Command | Purpose |
-|---------|---------|
-| `pt-search` | Search DDG, Google, Bing |
-| `pt-fetch` | Fetch page content |
+| Tool | Purpose | Example |
+|------|---------|---------|
+| `pt-search` | Search DDG, Google, Bing | `pt-search ddg "query" 5` |
+| `pt-fetch` | Fetch page content | `pt-fetch https://example.com` |
 
 ## Test Results
 
@@ -23,25 +23,19 @@ CLI tools for web search and page fetching with stealth browser support.
 | Bing | BLOCKED | OK | OK |
 | Fetch pages | OK | OK | OK |
 
-## Recommendations
-
-| Task | Command |
-|------|---------|
-| Quick search | `pt-search ddg "query" 5` |
-| Google/Bing search | `pt-search google "query" 5` (opens browser, solve CAPTCHA if needed) |
-| Fetch blocked page | `pt-fetch https://example.com` |
-| Stealth mode | Start CloakBrowser server first |
-
 ## Quick Start
 
 ```bash
-# Search DuckDuckGo (headless, no CAPTCHA)
+# DDG search (headless, fast, no CAPTCHA)
 pt-search ddg "query" 5
 
-# Search Google (headed, may need CAPTCHA)
-pt-search google "query" 5
+# Google search (headed, 20s timeout for CAPTCHA)
+pt-search google "query" 10 --headed
 
-# Fetch page (when WebFetch fails)
+# Google headless (will be blocked, but fast)
+pt-search google "query" 5 --headless
+
+# Fetch page when WebFetch fails
 pt-fetch https://docs.ton.org/standard/tokens/jettons/overview
 ```
 
@@ -121,13 +115,16 @@ npm install -g git+https://github.com/truongezgg/playwright-tools.git
 # Quick DDG search (headless, fast)
 pt-search ddg "cloakbrowser" 5
 
+# Google search (headed, user solves CAPTCHA if needed)
+pt-search google "next.js security" 10 --headed
+
+# Google headless (will be blocked, but fast)
+pt-search google "query" 5 --headless
+
 # Fetch page that WebFetch failed
 pt-fetch https://docs.ton.org/standard/tokens/jettons/overview
 
-# Search Google with stealth server
+# Search Google with stealth server (no CAPTCHA)
 docker compose up -d
 pt-search google "next.js security" 10
-
-# Force headed mode for CAPTCHA solving
-pt-search bing "query" 5 --headed
 ```

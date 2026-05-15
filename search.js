@@ -160,25 +160,39 @@ try {
 
   let results;
 
+  // Check if accessibility API is available
+  const hasAccessibility = typeof page.accessibility?.snapshot === 'function';
+
   if (rawSnapshot) {
-    // Raw snapshot mode: output YAML
+    // Raw snapshot mode
+    if (!hasAccessibility) {
+      console.error('Accessibility API not available with this browser. Use --eval or install Playwright browsers.');
+      await closeBrowser(browser, source);
+      process.exit(1);
+    }
     const snapshot = await page.accessibility.snapshot();
     console.log(JSON.stringify(snapshot, null, 2));
     await closeBrowser(browser, source);
     process.exit(0);
-  } else if (useEval) {
-    // Eval mode
-    console.error('Using eval mode...');
+  } else if (useEval || !hasAccessibility) {
+    // Eval mode (explicit or fallback when accessibility not available)
+    if (!hasAccessibility && !useEval) {
+      console.error('Accessibility API not available, using eval mode...');
+    }
     results = await page.evaluate(evalCode[engine]);
   } else {
-    // Snapshot mode (default)
+    // Snapshot mode (default when available)
     console.error('Using snapshot mode...');
-    const snapshot = await page.accessibility.snapshot();
-    const yaml = JSON.stringify(snapshot);
-    // For snapshot parsing, we need the raw YAML from playwright-cli
-    // Since we're using CDP, we'll use eval as fallback
-    // TODO: Implement proper snapshot YAML parsing from CDP
-    results = await page.evaluate(evalCode[engine]);
+    try {
+      const snapshot = await page.accessibility.snapshot();
+      const yaml = JSON.stringify(snapshot);
+      // Snapshot parsing for CDP requires YAML format
+      // For now, fallback to eval
+      results = await page.evaluate(evalCode[engine]);
+    } catch (e) {
+      console.error('Snapshot failed, using eval mode...');
+      results = await page.evaluate(evalCode[engine]);
+    }
   }
 
   // Filter ads

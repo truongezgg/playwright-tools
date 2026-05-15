@@ -67,16 +67,29 @@ try {
 
   let content;
 
+  // Check if accessibility API is available
+  const hasAccessibility = typeof page.accessibility?.snapshot === 'function';
+
   if (rawSnapshot) {
     // Raw snapshot mode
+    if (!hasAccessibility) {
+      console.error('Accessibility API not available with this browser. Use a different mode or install Playwright browsers.');
+      await closeBrowser(browser, source);
+      process.exit(1);
+    }
     const snapshot = await page.accessibility.snapshot();
     console.log(JSON.stringify(snapshot, null, 2));
   } else if (useSnapshot) {
     // Snapshot mode
-    const snapshot = await page.accessibility.snapshot();
-    // Extract text from snapshot
-    content = extractTextFromSnapshot(snapshot);
-    console.log(content);
+    if (!hasAccessibility) {
+      console.error('Accessibility API not available, falling back to page text...');
+      content = await page.evaluate(() => document.body?.innerText?.substring(0, 10000) || 'No content');
+      console.log(content);
+    } else {
+      const snapshot = await page.accessibility.snapshot();
+      content = extractTextFromSnapshot(snapshot);
+      console.log(content);
+    }
   } else if (selector) {
     // Selector mode
     content = await page.evaluate((sel) => {

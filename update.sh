@@ -35,12 +35,13 @@ if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then
   cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
 fi
 
-# Sync OpenCode tools if .opencode/tools/ exists in current directory
-OPENCODE_DIR="${ORIG_DIR}/.opencode/tools"
-if [ -d "$OPENCODE_DIR" ] && [ -d "$INSTALL_DIR/opencode" ]; then
-  echo "Syncing OpenCode tools..."
-  cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_DIR/"
-  cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_DIR/"
+# Sync OpenCode tools to global config
+OPENCODE_GLOBAL="$HOME/.config/opencode/tools"
+if [ -d "$INSTALL_DIR/opencode" ]; then
+  mkdir -p "$OPENCODE_GLOBAL"
+  echo "Syncing OpenCode tools to global config..."
+  cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
+  cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
   echo "  Synced: pt-web-search.ts, pt-web-fetch.ts"
 fi
 

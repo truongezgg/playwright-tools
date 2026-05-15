@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Playwright Tools Installer
-# Installs CLI tools and adds skill to agent directory
+# Installs CLI tools only
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
@@ -10,7 +10,6 @@ set -e
 
 REPO_URL="https://github.com/truongezgg/playwright-tools"
 INSTALL_DIR="$HOME/.playwright-tools"
-SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 
 echo "Installing Playwright Tools..."
 
@@ -28,7 +27,7 @@ fi
 cd "$INSTALL_DIR"
 npm install --production --quiet
 
-# Create CLI symlinks
+# Create CLI symlink
 mkdir -p "$HOME/.local/bin"
 ln -sf "$INSTALL_DIR/bin/pt.js" "$HOME/.local/bin/pt"
 chmod +x "$INSTALL_DIR/bin/pt.js"
@@ -37,23 +36,18 @@ chmod +x "$INSTALL_DIR/bin/pt.js"
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
-  export PATH="$HOME/.local/bin:$PATH"
+  export PATH="$HOME/.local/bin:$PATH
 fi
 
-# Install skill
-echo "Adding skill to $SKILL_DIR/playwright-tools..."
-mkdir -p "$SKILL_DIR"
-rm -rf "$SKILL_DIR/playwright-tools"
-cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
-
 echo ""
-echo "Done! Installed:"
-echo "  CLI:    pt"
-echo "  Skill:  $SKILL_DIR/playwright-tools/SKILL.md"
+echo "Done! CLI installed: pt"
 echo ""
 echo "Usage:"
 echo "  pt search ddg \"query\" 5"
 echo "  pt fetch https://example.com"
+echo ""
+echo "Add skill to your agent:"
+echo "  npx skills add https://github.com/truongezgg/playwright-tools"
 echo ""
 echo "Optional: Start stealth server for Google/Bing without CAPTCHA:"
 echo "  cd $INSTALL_DIR && docker compose up -d"

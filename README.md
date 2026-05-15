@@ -6,12 +6,22 @@ Uses real browsers to bypass bot detection, CAPTCHAs, and JavaScript rendering.
 
 ## Install
 
-```bash
-# curl (installs CLI + agent skill)
-curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
+**Step 1 — CLI tools:**
 
-# npm (CLI only, add skill manually)
+```bash
+curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
+```
+
+Or via npm:
+
+```bash
 npm install -g git+https://github.com/truongezgg/playwright-tools.git
+```
+
+**Step 2 — Add skill (optional):**
+
+```bash
+npx skills add https://github.com/truongezgg/playwright-tools
 ```
 
 ## Usage

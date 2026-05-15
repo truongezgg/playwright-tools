@@ -1,37 +1,34 @@
 #!/bin/bash
 
 # Playwright Tools Installer
-# Usage: curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
+# Installs CLI tools and adds skill to agent directory
+#
+# Usage:
+#   curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
 
 set -e
 
 REPO_URL="https://github.com/truongezgg/playwright-tools"
 INSTALL_DIR="$HOME/.playwright-tools"
+SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 
 echo "Installing Playwright Tools..."
 
-# Create installation directory
-mkdir -p "$INSTALL_DIR"
+# Clone or update repo
+if [ -d "$INSTALL_DIR" ]; then
+  echo "Updating existing installation..."
+  cd "$INSTALL_DIR"
+  git pull --quiet
+else
+  echo "Cloning repository..."
+  git clone --quiet "$REPO_URL" "$INSTALL_DIR"
+fi
 
-# Download files
-echo "Downloading files..."
-curl -sSL "$REPO_URL/raw/main/package.json" -o "$INSTALL_DIR/package.json"
-curl -sSL "$REPO_URL/raw/main/search.js" -o "$INSTALL_DIR/search.js"
-curl -sSL "$REPO_URL/raw/main/fetch.js" -o "$INSTALL_DIR/fetch.js"
-curl -sSL "$REPO_URL/raw/main/test.js" -o "$INSTALL_DIR/test.js"
-
-# Create lib directory
-mkdir -p "$INSTALL_DIR/lib"
-curl -sSL "$REPO_URL/raw/main/lib/browser.js" -o "$INSTALL_DIR/lib/browser.js"
-curl -sSL "$REPO_URL/raw/main/lib/snapshot.js" -o "$INSTALL_DIR/lib/snapshot.js"
-
-# Install dependencies
-echo "Installing dependencies..."
+# Install npm dependencies
 cd "$INSTALL_DIR"
-npm install --production
+npm install --production --quiet
 
-# Create symlinks
-echo "Creating commands..."
+# Create CLI symlinks
 mkdir -p "$HOME/.local/bin"
 ln -sf "$INSTALL_DIR/search.js" "$HOME/.local/bin/pt-search"
 ln -sf "$INSTALL_DIR/fetch.js" "$HOME/.local/bin/pt-fetch"
@@ -39,19 +36,25 @@ chmod +x "$INSTALL_DIR/search.js" "$INSTALL_DIR/fetch.js"
 
 # Add to PATH if needed
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
-    export PATH="$HOME/.local/bin:$PATH"
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+  export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# Install skill
+echo "Adding skill to $SKILL_DIR/playwright-tools..."
+mkdir -p "$SKILL_DIR"
+rm -rf "$SKILL_DIR/playwright-tools"
+cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+
 echo ""
-echo "Playwright Tools installed successfully!"
+echo "Done! Installed:"
+echo "  CLI:    pt-search, pt-fetch"
+echo "  Skill:  $SKILL_DIR/playwright-tools/SKILL.md"
 echo ""
-echo "Commands available:"
-echo "  pt-search [engine] [query] [count]  - Search the web"
-echo "  pt-fetch [url]                      - Fetch a page"
+echo "Usage:"
+echo "  pt-search ddg \"query\" 5"
+echo "  pt-fetch https://example.com"
 echo ""
-echo "Optional: Start stealth browser server for better stealth:"
-echo "  docker-compose up -d"
-echo ""
-echo "Run 'pt-search --help' for more options."
+echo "Optional: Start stealth server for Google/Bing without CAPTCHA:"
+echo "  cd $INSTALL_DIR && docker compose up -d"

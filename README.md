@@ -2,10 +2,22 @@
 
 CLI tools for searching the web and fetching pages when standard HTTP clients fail.
 
-Uses real browsers (Chrome, CloakBrowser) to bypass bot detection, CAPTCHAs, and JavaScript rendering issues.
+Uses real browsers to bypass bot detection, CAPTCHAs, and JavaScript rendering.
+
+## Install
 
 ```bash
-npm install -g git+https://github.com/truongezgg/playwright-tools.git
+curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
+```
+
+This installs:
+- **CLI commands:** `pt-search`, `pt-fetch`
+- **Agent skill:** `~/.agents/skills/playwright-tools/`
+
+To update:
+
+```bash
+cd ~/.playwright-tools && git pull && npm install --production
 ```
 
 ## Commands
@@ -16,7 +28,11 @@ npm install -g git+https://github.com/truongezgg/playwright-tools.git
 pt-search <engine> <query> [count] [options]
 ```
 
-**Engines:** `ddg` | `google` | `bing`
+| Engine | Headless | Headed | CDP Server |
+|--------|----------|--------|------------|
+| DuckDuckGo | OK | OK | OK |
+| Google | blocked | OK | OK |
+| Bing | blocked | OK | OK |
 
 ```bash
 # DuckDuckGo (headless, fast)
@@ -25,7 +41,7 @@ pt-search ddg "seavoca" 5
 # Google (headed, user solves CAPTCHA if needed)
 pt-search google "next.js security" 10 --headed
 
-# Google (headless — will be blocked)
+# Google (headless — blocked)
 pt-search google "query" 5 --headless
 ```
 
@@ -33,13 +49,15 @@ pt-search google "query" 5 --headless
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--headed` | Open visible browser | auto (Google/Bing) |
-| `--headless` | Run without browser window | auto (DDG) |
-| `--cdp URL` | Connect to CDP server | `localhost:9222` |
-| `--no-cloak` | Skip CDP, use local browser | false |
-| `--eval` | Extract via JavaScript | default |
-| `--snapshot` | Extract via accessibility tree | - |
-| `--rawsnapshot` | Output raw YAML tree | - |
+| `--headed` | Visible browser | auto |
+| `--headless` | No browser window | auto |
+| `--cdp URL` | CDP server | `localhost:9222` |
+| `--no-cloak` | Skip CDP | false |
+| `--snapshot` | Accessibility tree extraction | - |
+| `--rawsnapshot` | Raw YAML output | - |
+| `--eval` | JavaScript extraction | default |
+
+**Default:** DDG = headless, Google/Bing = headed.
 
 ### pt-fetch
 
@@ -48,10 +66,10 @@ pt-fetch <url> [options]
 ```
 
 ```bash
-# Fetch page content
+# Page content
 pt-fetch https://example.com
 
-# Extract specific element
+# Specific element
 pt-fetch https://example.com --selector "article"
 
 # Accessibility tree
@@ -62,29 +80,20 @@ pt-fetch https://example.com --snapshot
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--selector CSS` | Extract specific element | - |
-| `--headless` | Run without browser window | true |
-| `--cdp URL` | Connect to CDP server | `localhost:9222` |
-| `--no-cloak` | Skip CDP, use local browser | false |
-| `--snapshot` | Output accessibility tree | - |
-| `--rawsnapshot` | Output raw YAML tree | - |
-| `--timeout MS` | Page load timeout | `15000` |
-
-## Browser Priority
-
-Commands try browsers in order:
-
-1. **CDP server** at `localhost:9222` (stealth, no CAPTCHA)
-2. **Playwright browser** (if installed via `npx playwright install chromium`)
-3. **System Chrome** (auto-detected)
-
-No CDP server? Commands still work via system Chrome. Google/Bing will need CAPTCHA solving.
+| `--selector CSS` | Extract element | - |
+| `--headless` | No browser window | true |
+| `--cdp URL` | CDP server | `localhost:9222` |
+| `--no-cloak` | Skip CDP | false |
+| `--snapshot` | Accessibility tree | - |
+| `--rawsnapshot` | Raw YAML | - |
+| `--timeout MS` | Load timeout | `15000` |
 
 ## Stealth Server
 
 Run CloakBrowser in Docker for Google/Bing without CAPTCHA:
 
 ```bash
+cd ~/.playwright-tools
 docker compose up -d
 ```
 
@@ -95,87 +104,41 @@ CLI auto-connects to `localhost:9222`. No code changes needed.
 pt-search google "query" 5
 ```
 
-Stop server:
+## How It Works
 
-```bash
-docker compose down
-```
+**Browser priority:**
 
-## Tested Engines
+1. CDP server at `localhost:9222` (stealth, no CAPTCHA)
+2. Playwright browser (if installed)
+3. System Chrome (auto-detected)
 
-| Engine | Headless | Headed | CDP Server |
-|--------|----------|--------|------------|
-| DuckDuckGo | OK | OK | OK |
-| Google | blocked | OK | OK |
-| Bing | blocked | OK | OK |
+**Extraction modes:**
 
-**Recommendation:** Use DDG for quick searches. Use Google/Bing with CDP server or `--headed`.
-
-## How Extraction Works
-
-Two modes for getting data from pages:
-
-**Eval mode** (default) — runs JavaScript in page:
-- Fast
-- Breaks if site changes CSS classes
-- Output: JSON
-
-**Snapshot mode** (`--snapshot`) — reads accessibility tree:
-- Stable (uses semantic structure: heading, link, generic)
-- Survives CSS class changes
-- Output: structured text
+| Mode | Flag | Stability | Speed |
+|------|------|-----------|-------|
+| Eval | `--eval` | Low (CSS selectors) | Fast |
+| Snapshot | `--snapshot` | High (accessibility tree) | Medium |
 
 ```bash
 # Default (eval)
 pt-search ddg "query" 5
 
-# Stable extraction
+# Stable (snapshot)
 pt-search ddg "query" 5 --snapshot
 
-# Debug: raw YAML tree
+# Debug (raw YAML)
 pt-search ddg "query" 5 --rawsnapshot
-```
-
-## Install
-
-```bash
-# SSH
-npm install -g git+ssh://git@github.com:truongezgg/playwright-tools.git
-
-# HTTPS
-npm install -g git+https://github.com/truongezgg/playwright-tools.git
-
-# curl
-curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
-```
-
-## Update
-
-```bash
-npm update -g playwright-tools
 ```
 
 ## Why This Exists
 
 | Problem | This tool |
 |---------|-----------|
-| `WebSearch` rate-limited | Real browser, not HTTP client |
+| `WebSearch` rate-limited | Real browser |
 | `WebFetch` returns 502/403 | JavaScript rendering |
-| Google shows CAPTCHA | CDP server with stealth |
-| CSS selectors break | Snapshot mode (accessibility tree) |
-| Vendor lock-in | Only `playwright-core` dependency, standard CDP |
-
-## File Structure
-
-```
-lib/
-  browser.js     Browser connection (CDP → Playwright → Chrome)
-  snapshot.js    Snapshot parser (DDG, Google, Bing)
-search.js        Search CLI
-fetch.js         Fetch CLI
-test.js          Tests
-docker-compose.yml  CloakBrowser server
-```
+| Google shows CAPTCHA | CDP stealth server |
+| CSS selectors break | Snapshot mode |
+| Vendor lock-in | Only `playwright-core`, standard CDP |
 
 ## License
 

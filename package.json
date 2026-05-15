@@ -10,9 +10,11 @@
   "scripts": {
     "test": "node test.js",
     "test:unit": "node test.js --unit",
-    "test:integration": "node test.js --integration"
+    "test:integration": "node test.js --integration",
+    "server": "node server.js"
   },
   "dependencies": {
+    "cloakbrowser": "^0.3.0",
     "playwright-core": "^1.50.0"
   },
   "keywords": ["playwright", "search", "fetch", "stealth", "browser", "cdp"],

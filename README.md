@@ -44,11 +44,9 @@ pt-fetch https://example.com
 
 ## Stealth Server (Optional)
 
-For better stealth (no CAPTCHAs), run a CloakBrowser server.
+For better stealth (no CAPTCHAs), run a CloakBrowser server via Docker.
 
-> **Security Note:** CloakBrowser is an open-source project. Running it in Docker is recommended for isolation. Use at your own risk.
-
-### Docker (Recommended)
+> **Security Note:** CloakBrowser is an open-source project. Running in Docker is recommended for isolation.
 
 ```bash
 # Start server
@@ -61,20 +59,6 @@ pt-fetch https://example.com
 
 # Stop server
 docker-compose down
-```
-
-### Local (Alternative)
-
-```bash
-# Install cloakbrowser
-npm install cloakbrowser
-
-# Start server on port 9222
-npm run server
-# or
-node server.js 9222
-
-# Stop: Ctrl+C
 ```
 
 ## Commands

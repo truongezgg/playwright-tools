@@ -6,7 +6,9 @@ export default tool({
 - Returns structured results: title, link, snippet
 - Use this tool when the built-in websearch tool is unavailable or returns no results
 
-Example: query="next.js tutorial" engine="ddg" limit=5`,
+Example:
+  query="next.js tutorial"
+  query="next.js tutorial" engine="ddg"`,
   args: {
     query: tool.schema.string().describe("Search query"),
     engine: tool.schema.enum(["ddg", "google", "bing"]).describe("Search engine to use").default("ddg"),

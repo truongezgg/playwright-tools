@@ -6,7 +6,9 @@ export default tool({
 - Renders JavaScript before extracting content
 - Use this tool when the built-in webfetch tool fails (502, 403, empty response)
 
-Example: url="https://example.com" selector="article"`,
+Example:
+  url="https://example.com"
+  url="https://example.com" selector="article"`,
   args: {
     url: tool.schema.string().describe("URL to fetch"),
     selector: tool.schema.string().optional().describe("CSS selector to extract specific element (optional)"),

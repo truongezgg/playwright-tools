@@ -55,22 +55,19 @@ const url = urls[engine];
 // Eval extraction code
 const evalCode = {
   ddg: `(() => {
-    function getSnippet(el) {
-      var spans = el.querySelectorAll('span');
-      for (var j = 0; j < spans.length; j++) {
-        var t = spans[j].innerText?.trim();
-        if (t && t.length > 50 && !t.includes('AD')) return t;
-      }
-      return '';
+    const articles = document.querySelectorAll('article');
+    const results = [];
+    for (const el of articles) {
+      const titleA = el.querySelector('a[data-testid="result-title-a"]');
+      if (!titleA) continue;
+      const title = titleA.querySelector('h2')?.innerText?.trim() || titleA.innerText?.trim();
+      const link = titleA.href;
+      const snippet = el.querySelector('div[data-result="snippet"]')?.innerText?.trim() || '';
+      if (!title) continue;
+      if (title.includes('\\nAD') || link?.match(/duckduckgo\\.com\\/.*\\.js/)) continue;
+      results.push({ title, link, snippet });
     }
-    return [...document.querySelectorAll('article')].map(el => ({
-      title: el.querySelector('h2')?.innerText?.trim(),
-      link: el.querySelector('h2 a')?.href,
-      snippet: getSnippet(el),
-    }))
-    .filter(r => r.title)
-    .filter(r => !r.title.includes('\\nAD') && !r.link?.match(/duckduckgo\\.com\\/.*\\.js/))
-    .slice(0, ${count});
+    return results.slice(0, ${count});
   })()`,
   google: `(() => {
     const seen = new Set();

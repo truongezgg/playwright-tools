@@ -34,6 +34,8 @@ Commands:
   search <engine> <query> [count]   Search the web
   fetch <url> [options]             Fetch page content
   update                            Update playwright-tools
+  config                            Show config
+  config init                       Create default config
 
 Search Engines:
   ddg        DuckDuckGo (headless by default)
@@ -71,6 +73,25 @@ Examples:
 // --version
 if (command === '--version' || command === '-v' || command === 'version') {
   console.log(`${pkg.name} v${pkg.version}`);
+  process.exit(0);
+}
+
+// Handle config command
+if (command === 'config') {
+  const { loadConfig } = await import('../lib/config.js');
+  const config = loadConfig();
+  if (args[1] === 'init') {
+    const { writeFileSync, mkdirSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { homedir } = await import('node:os');
+    const dir = join(homedir(), '.playwright-tools');
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, 'config.json');
+    writeFileSync(path, JSON.stringify({ cdpUrl: 'http://localhost:9222' }, null, 2));
+    console.log(`Config created: ${path}`);
+  } else {
+    console.log(JSON.stringify(config, null, 2) || 'No config found. Run "pt config init" to create one.');
+  }
   process.exit(0);
 }
 

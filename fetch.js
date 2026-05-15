@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
+import { getConfig } from './lib/config.js';
 
 const args = process.argv.slice(2);
 const flags = args.filter(a => a.startsWith('--'));
@@ -8,7 +9,7 @@ const params = args.filter(a => !a.startsWith('--'));
 
 const url = params[0];
 
-const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || process.env.PT_CDP_URL || 'http://localhost:9222';
+const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || getConfig('cdpUrl', 'PT_CDP_URL', 'http://localhost:9222');
 const noCloak = flags.includes('--no-cloak');
 const useSnapshot = flags.includes('--snapshot');
 const rawSnapshot = flags.includes('--rawsnapshot');

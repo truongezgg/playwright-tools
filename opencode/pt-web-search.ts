@@ -20,11 +20,7 @@ Usage notes:
     count: tool.schema.number().describe("Number of results to return (default: 5)").default(5),
   },
   async execute(args) {
-    try {
-      const result = await Bun.$`pt search ${args.engine} ${args.query} ${args.count.toString()}`.text()
-      return result
-    } catch (error) {
-      return `Search failed: ${error instanceof Error ? error.message : String(error)}`
-    }
+    const result = await Bun.$`pt search ${args.engine} ${args.query} ${args.count.toString()}`.text()
+    return result.trim()
   },
 })

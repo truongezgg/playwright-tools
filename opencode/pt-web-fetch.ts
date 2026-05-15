@@ -18,15 +18,10 @@ Usage notes:
     snapshot: tool.schema.boolean().optional().describe("Return accessibility tree instead of text (default: false)").default(false),
   },
   async execute(args) {
-    try {
-      const flags: string[] = []
-      if (args.selector) flags.push(`--selector=${args.selector}`)
-      if (args.snapshot) flags.push("--snapshot")
-
-      const result = await Bun.$`pt fetch ${args.url} ${flags}`.text()
-      return result
-    } catch (error) {
-      return `Fetch failed: ${error instanceof Error ? error.message : String(error)}`
-    }
+    const flags: string[] = []
+    if (args.selector) flags.push(`--selector=${args.selector}`)
+    if (args.snapshot) flags.push("--snapshot")
+    const result = await Bun.$`pt fetch ${args.url} ${flags}`.text()
+    return result.trim()
   },
 })

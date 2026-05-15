@@ -11,13 +11,16 @@
  *   --no-cloak      Force local Playwright (no CDP)
  *   --eval          Use eval mode instead of snapshot
  *   --rawsnapshot   Output raw snapshot YAML
- *   --headless      Headless mode for local browser
+ *   --headless      Force headless mode
+ *   --headed        Force headed mode (for CAPTCHA solving)
+ *
+ * Default mode: DDG = headless, Google/Bing = headed (they block headless)
  *
  * Examples:
  *   pt-search ddg "cloakbrowser" 5
- *   pt-search google "next.js security" 10 --eval
- *   pt-search bing "seavoca" 3 --rawsnapshot
- *   pt-search ddg "query" 5 --no-cloak --headless
+ *   pt-search google "next.js security" 10
+ *   pt-search bing "seavoca" 3
+ *   pt-search ddg "query" 5 --headless
  */
 
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
@@ -35,7 +38,11 @@ const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || 'http:/
 const noCloak = flags.includes('--no-cloak');
 const useEval = flags.includes('--eval');
 const rawSnapshot = flags.includes('--rawsnapshot');
-const headless = flags.includes('--headless');
+const explicitHeadless = flags.includes('--headless');
+const explicitHeaded = flags.includes('--headed');
+
+// Default: DDG = headless, Google/Bing = headed (they block headless)
+const headless = explicitHeadless ? true : (explicitHeaded ? false : engine === 'ddg');
 
 if (!query) {
   console.error('Usage: pt-search [engine] [query] [count] [--cdp URL] [--no-cloak] [--eval] [--rawsnapshot] [--headless]');
@@ -142,10 +149,10 @@ try {
       console.error('⚠️  CAPTCHA detected! Please solve it in the browser.');
       console.error('Press Enter when done...');
 
-      if (source === 'local') {
+      if (source === 'local' || source === 'chrome') {
         process.stdin.resume();
         await new Promise(resolve => process.stdin.once('data', resolve));
-        await page.waitForSelector(sel.container, { timeout: 15000 });
+        await page.waitForSelector(sel.container, { timeout: 20000 });
       } else {
         console.error('Cannot solve CAPTCHA via CDP. Use --no-cloak to open local browser.');
         await closeBrowser(browser, source);

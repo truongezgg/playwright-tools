@@ -1,28 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Search the web using Playwright with stealth browser support.
- *
- * Usage:
- *   pt-search [engine] [query] [count] [options]
- *
- * Options:
- *   --cdp URL       CDP server URL (default: http://localhost:9222)
- *   --no-cloak      Force local Playwright (no CDP)
- *   --eval          Use eval mode instead of snapshot
- *   --rawsnapshot   Output raw snapshot YAML
- *   --headless      Force headless mode
- *   --headed        Force headed mode (for CAPTCHA solving)
- *
- * Default mode: DDG = headless, Google/Bing = headed (they block headless)
- *
- * Examples:
- *   pt-search ddg "cloakbrowser" 5
- *   pt-search google "next.js security" 10
- *   pt-search bing "seavoca" 3
- *   pt-search ddg "query" 5 --headless
- */
-
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
 import { parseSnapshot } from './lib/snapshot.js';
 
@@ -45,9 +22,8 @@ const explicitHeaded = flags.includes('--headed');
 const headless = explicitHeadless ? true : (explicitHeaded ? false : engine === 'ddg');
 
 if (!query) {
-  console.error('Usage: pt-search [engine] [query] [count] [--cdp URL] [--no-cloak] [--eval] [--rawsnapshot] [--headless]');
-  console.error('Example: pt-search ddg "cloakbrowser" 5');
-  console.error('       pt-search google "next.js" 10 --eval');
+  console.error('Usage: pt-search <engine> <query> [count] [options]');
+  console.error('Run "pt-search --help" for more info');
   process.exit(1);
 }
 

@@ -1,28 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Fetch a web page using Playwright with stealth browser support.
- *
- * Usage:
- *   pt-fetch [url] [options]
- *
- * Options:
- *   --cdp URL       CDP server URL (default: http://localhost:9222)
- *   --no-cloak      Force local Playwright (no CDP)
- *   --snapshot       Output accessibility tree snapshot
- *   --rawsnapshot    Output raw snapshot YAML
- *   --selector CSS   Extract specific element
- *   --headless       Headless mode for local browser
- *   --timeout MS     Page load timeout (default: 15000)
- *
- * Examples:
- *   pt-fetch https://example.com
- *   pt-fetch https://example.com --snapshot
- *   pt-fetch https://example.com --selector "article"
- *   pt-fetch https://example.com --rawsnapshot
- *   pt-fetch https://example.com --no-cloak --headless
- */
-
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
 
 const args = process.argv.slice(2);
@@ -40,9 +17,8 @@ const selector = flags.find(f => f.startsWith('--selector='))?.split('=')[1] || 
 const timeout = parseInt(flags.find(f => f.startsWith('--timeout='))?.split('=')[1]) || 15000;
 
 if (!url) {
-  console.error('Usage: pt-fetch [url] [--cdp URL] [--no-cloak] [--snapshot] [--rawsnapshot] [--selector CSS] [--headless] [--timeout MS]');
-  console.error('Example: pt-fetch https://example.com');
-  console.error('       pt-fetch https://example.com --snapshot');
+  console.error('Usage: pt-fetch <url> [options]');
+  console.error('Run "pt-fetch --help" for more info');
   process.exit(1);
 }
 

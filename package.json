@@ -4,6 +4,7 @@
   "description": "CLI tools for web search and page fetching with stealth browser support",
   "type": "module",
   "bin": {
+    "pt": "./bin/pt.js",
     "pt-search": "./search.js",
     "pt-fetch": "./fetch.js"
   },

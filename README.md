@@ -11,22 +11,37 @@ curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/ins
 ```
 
 This installs:
-- **CLI commands:** `pt-search`, `pt-fetch`
+- **CLI:** `pt`, `pt-search`, `pt-fetch`
 - **Agent skill:** `~/.agents/skills/playwright-tools/`
 
-To update:
+## Usage
 
 ```bash
+pt search ddg "seavoca" 5
+pt search google "next.js" 10 --headed
+pt fetch https://example.com
+pt update
+```
+
+Or use standalone commands:
+
+```bash
+pt-search ddg "query" 5
+pt-fetch https://example.com
 pt-update
 ```
 
 ## Commands
 
-### pt-search
+| Command | Description |
+|---------|-------------|
+| `pt search <engine> <query> [count]` | Search DDG, Google, Bing |
+| `pt fetch <url>` | Fetch page content |
+| `pt update` | Update to latest version |
+| `pt --help` | Show help |
+| `pt --version` | Show version |
 
-```bash
-pt-search <engine> <query> [count] [options]
-```
+### Search Engines
 
 | Engine | Headless | Headed | CDP Server |
 |--------|----------|--------|------------|
@@ -35,17 +50,20 @@ pt-search <engine> <query> [count] [options]
 | Bing | blocked | OK | OK |
 
 ```bash
-# DuckDuckGo (headless, fast)
-pt-search ddg "seavoca" 5
-
-# Google (headed, user solves CAPTCHA if needed)
-pt-search google "next.js security" 10 --headed
-
-# Google (headless — blocked)
-pt-search google "query" 5 --headless
+pt search ddg "query" 5              # Headless, fast
+pt search google "query" 10 --headed # Headed, CAPTCHA solving
+pt search bing "query" 3 --snapshot  # Stable extraction
 ```
 
-**Options:**
+### Fetch
+
+```bash
+pt fetch https://example.com
+pt fetch https://example.com --selector "article"
+pt fetch https://example.com --snapshot
+```
+
+## Options
 
 | Flag | Description | Default |
 |------|-------------|---------|
@@ -53,40 +71,11 @@ pt-search google "query" 5 --headless
 | `--headless` | No browser window | auto |
 | `--cdp URL` | CDP server | `localhost:9222` |
 | `--no-cloak` | Skip CDP | false |
-| `--snapshot` | Accessibility tree extraction | - |
-| `--rawsnapshot` | Raw YAML output | - |
 | `--eval` | JavaScript extraction | default |
-
-**Default:** DDG = headless, Google/Bing = headed.
-
-### pt-fetch
-
-```bash
-pt-fetch <url> [options]
-```
-
-```bash
-# Page content
-pt-fetch https://example.com
-
-# Specific element
-pt-fetch https://example.com --selector "article"
-
-# Accessibility tree
-pt-fetch https://example.com --snapshot
-```
-
-**Options:**
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--selector CSS` | Extract element | - |
-| `--headless` | No browser window | true |
-| `--cdp URL` | CDP server | `localhost:9222` |
-| `--no-cloak` | Skip CDP | false |
 | `--snapshot` | Accessibility tree | - |
 | `--rawsnapshot` | Raw YAML | - |
-| `--timeout MS` | Load timeout | `15000` |
+| `--selector CSS` | Extract element (fetch) | - |
+| `--timeout MS` | Load timeout (fetch) | `15000` |
 
 ## Stealth Server
 
@@ -97,12 +86,7 @@ cd ~/.playwright-tools
 docker compose up -d
 ```
 
-CLI auto-connects to `localhost:9222`. No code changes needed.
-
-```bash
-# Now Google works headless
-pt-search google "query" 5
-```
+CLI auto-connects to `localhost:9222`.
 
 ## How It Works
 
@@ -116,19 +100,8 @@ pt-search google "query" 5
 
 | Mode | Flag | Stability | Speed |
 |------|------|-----------|-------|
-| Eval | `--eval` | Low (CSS selectors) | Fast |
-| Snapshot | `--snapshot` | High (accessibility tree) | Medium |
-
-```bash
-# Default (eval)
-pt-search ddg "query" 5
-
-# Stable (snapshot)
-pt-search ddg "query" 5 --snapshot
-
-# Debug (raw YAML)
-pt-search ddg "query" 5 --rawsnapshot
-```
+| Eval | `--eval` | Low | Fast |
+| Snapshot | `--snapshot` | High | Medium |
 
 ## Why This Exists
 

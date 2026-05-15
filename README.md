@@ -60,26 +60,212 @@ pt-search google "query" 10
 pt-fetch https://example.com
 ```
 
-## Stealth Server (Optional)
+## How It Works
 
-For better stealth (no CAPTCHAs), run a CloakBrowser server via Docker.
+### Browser Connection Priority
 
-> **Security Note:** CloakBrowser is an open-source project. Running in Docker is recommended for isolation.
+When you run a command, it tries browsers in this order:
+
+```
+1. CDP Server (localhost:9222)  →  Stealth mode, no CAPTCHA
+2. Playwright browser           →  If installed via npx playwright install
+3. System Chrome                →  Auto-detected from standard paths
+```
+
+**Example flow:**
+```bash
+pt-search ddg "query" 5
+
+# 1. Try connect to localhost:9222 (CloakBrowser server)
+#    → If running: use it (stealth, no CAPTCHA)
+#    → If not running: continue
+
+# 2. Try Playwright browser
+#    → If installed: use it
+#    → If not installed: continue
+
+# 3. Try system Chrome
+#    → Found: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+#    → Use it (may need CAPTCHA for Google/Bing)
+```
+
+### Search Engine Behavior
+
+Each engine has different blocking behavior:
+
+| Engine | Headless | Headed | Why |
+|--------|----------|--------|-----|
+| DuckDuckGo | OK | OK | Less aggressive bot detection |
+| Google | BLOCKED | OK | Detects headless Chrome fingerprint |
+| Bing | BLOCKED | OK | Similar to Google |
+
+**Auto mode selection:**
+- DDG → Runs headless (fast, no browser window)
+- Google/Bing → Runs headed (opens browser, user can solve CAPTCHA)
+
+**Override:**
+```bash
+pt-search google "query" 5 --headless   # Force headless (will be blocked)
+pt-search ddg "query" 5 --headed        # Force headed (unnecessary but works)
+```
+
+### CAPTCHA Handling
+
+When Google/Bing show CAPTCHA:
+
+```
+1. Browser opens in headed mode
+2. CAPTCHA detected → message shown in terminal
+3. User solves CAPTCHA in browser window
+4. Press Enter in terminal
+5. Results extracted (20s timeout)
+```
+
+**With CloakBrowser server:**
+- No CAPTCHA appears (stealth fingerprint)
+- Runs headless (no browser window)
+
+### Data Extraction Methods
+
+Two ways to extract data from pages:
+
+#### 1. Eval Mode (Default)
+
+Runs JavaScript in page context:
+
+```javascript
+// Extract search results
+document.querySelectorAll('article').forEach(el => ({
+  title: el.querySelector('h2')?.innerText,
+  link: el.querySelector('h2 a')?.href,
+}))
+```
+
+- **Fast** — direct DOM access
+- **Fragile** — breaks if CSS selectors change
+- **Output** — JSON
+
+#### 2. Snapshot Mode
+
+Reads accessibility tree (semantic structure):
+
+```yaml
+- article:
+  - heading "Title" [level=2]:
+    - link "https://...":
+  - generic: "Snippet text..."
+```
+
+- **Stable** — uses semantic structure, not CSS classes
+- **Slower** — extra step to get tree
+- **Output** — structured text or YAML
+
+**Use snapshot when:**
+- CSS selectors break
+- Site changes layout frequently
+- Need stable extraction
+
+```bash
+pt-search ddg "query" 5 --snapshot      # Parsed snapshot
+pt-search ddg "query" 5 --rawsnapshot   # Raw YAML tree
+```
+
+### Ad Filtering
+
+DDG search results include ads. We filter them out:
+
+**Detection:**
+- Title contains `\nAD`
+- Link matches `duckduckgo.com/*.js` (ad redirect)
+
+**Filtered:**
+```json
+{
+  "title": "Ad Result\nAD",
+  "link": "https://duckduckgo.com/y.js?ad_domain=..."
+}
+```
+
+**Kept:**
+```json
+{
+  "title": "Real Result",
+  "link": "https://example.com"
+}
+```
+
+### Snapshot Parser
+
+For DDG, we parse the accessibility tree to extract results:
+
+```
+article
+├── heading [level=2] → Title
+│   └── link → URL
+└── generic → Snippet
+```
+
+Parser handles:
+- Quoted titles (single/double quotes)
+- Nested link structures
+- Snippet detection (first long text > 30 chars)
+- Ad filtering
+
+## Stealth Server
+
+### Why Use It?
+
+| Without Server | With Server |
+|----------------|-------------|
+| Google/Bing blocked (headless) | All engines work |
+| May need CAPTCHA solving | No CAPTCHA |
+| Browser window opens | Headless, no window |
+
+### How It Works
+
+```
+┌─────────────────────────────────┐
+│  Docker Container               │
+│  ┌─────────────────────────┐    │
+│  │ CloakBrowser            │    │
+│  │ - Stealth Chromium      │    │
+│  │ - Humanized behavior    │    │
+│  │ - CDP server :9222      │    │
+│  └─────────────────────────┘    │
+└─────────────────────────────────┘
+            ▲
+            │ CDP (Chrome DevTools Protocol)
+            │
+┌─────────────────────────────────┐
+│  CLI Tools                      │
+│  - playwright-core (only dep)   │
+│  - Connects via CDP             │
+│  - No CloakBrowser dependency   │
+└─────────────────────────────────┘
+```
+
+**Key insight:** CLI tools don't depend on CloakBrowser. They connect via standard CDP protocol. You can swap CloakBrowser for any stealth browser server.
+
+### Setup
 
 ```bash
 # Start server
-docker-compose up -d
+docker compose up -d
 
-# CLI auto-connects to localhost:9222
-pt-search ddg "query" 5
-pt-search google "query" 5
-pt-fetch https://example.com
+# Verify
+curl http://localhost:9222/json/version
 
-# Stop server
-docker-compose down
+# Stop
+docker compose down
 ```
 
-## Commands
+### Security
+
+- CloakBrowser is open-source — use at your own risk
+- Docker provides isolation from host system
+- CLI tools have no CloakBrowser dependency
+
+## Commands Reference
 
 ### pt-search
 
@@ -90,11 +276,13 @@ Engines: ddg, google, bing
 
 Options:
   --cdp URL       CDP server URL (default: http://localhost:9222)
-  --no-cloak      Force local Playwright
+  --no-cloak      Force local browser (no CDP)
   --eval          Use eval mode (fast, CSS selectors)
-  --snapshot      Use snapshot mode (stable, accessibility tree)
   --rawsnapshot   Output raw snapshot YAML
-  --headless      Headless mode for local browser
+  --headless      Force headless mode
+  --headed        Force headed mode (for CAPTCHA solving)
+
+Default: DDG=headless, Google/Bing=headed
 ```
 
 ### pt-fetch
@@ -104,7 +292,7 @@ pt-fetch [url] [options]
 
 Options:
   --cdp URL       CDP server URL
-  --no-cloak      Force local Playwright
+  --no-cloak      Force local browser
   --snapshot       Output accessibility tree
   --rawsnapshot    Output raw snapshot YAML
   --selector CSS   Extract specific element
@@ -112,34 +300,23 @@ Options:
   --timeout MS     Page load timeout (default: 15000)
 ```
 
-## Architecture
+## File Structure
 
 ```
-┌─────────────────────────────────┐
-│  Docker Container               │
-│  ┌─────────────────────────┐    │
-│  │ Stealth Browser Server  │    │
-│  │ (Chromium + stealth)    │    │
-│  │ Port 9222 (CDP)         │    │
-│  └─────────────────────────┘    │
-└─────────────────────────────────┘
-            ▲
-            │ CDP connection
-            │
-┌─────────────────────────────────┐
-│  CLI Tools (playwright-tools)   │
-│  - pt-search                    │
-│  - pt-fetch                     │
-│  Fallback: local Playwright     │
-└─────────────────────────────────┘
+playwright-tools/
+├── lib/
+│   ├── browser.js      # Browser connection (CDP → Playwright → Chrome)
+│   └── snapshot.js     # Snapshot parser (DDG, Google, Bing)
+├── search.js           # Search CLI
+├── fetch.js            # Fetch CLI
+├── test.js             # Unit tests (21 tests)
+├── install.sh          # curl installer
+├── docker-compose.yml  # CloakBrowser server
+├── package.json        # Only depends on playwright-core
+└── skills/
+    └── playwright-tools/
+        └── SKILL.md    # Agent skill documentation
 ```
-
-## Why This Design?
-
-1. **No vendor lock-in** — CLI only uses `playwright-core`, connects via CDP
-2. **Security** — Stealth browser isolated in Docker
-3. **Flexibility** — Swap CloakBrowser for any stealth browser server
-4. **Fallback** — Works without server (may need CAPTCHA)
 
 ## Development
 

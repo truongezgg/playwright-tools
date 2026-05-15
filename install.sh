@@ -1,43 +1,23 @@
 #!/bin/bash
 
 # Playwright Tools Installer
-# Installs CLI tools only
+# Installs CLI globally via npm from GitHub
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
 
 set -e
 
-REPO_URL="https://github.com/truongezgg/playwright-tools"
-INSTALL_DIR="$HOME/.playwright-tools"
+REPO_URL="git+https://github.com/truongezgg/playwright-tools.git"
 
 echo "Installing Playwright Tools..."
+echo "Source: $REPO_URL"
 
-# Clone or update repo
-if [ -d "$INSTALL_DIR" ]; then
-  echo "Updating existing installation..."
-  cd "$INSTALL_DIR"
-  git pull --quiet
-else
-  echo "Cloning repository..."
-  git clone --quiet "$REPO_URL" "$INSTALL_DIR"
-fi
+# Uninstall existing global package if present
+npm uninstall -g playwright-tools 2>/dev/null || true
 
-# Install npm dependencies
-cd "$INSTALL_DIR"
-npm install --production --quiet
-
-# Create CLI symlink
-mkdir -p "$HOME/.local/bin"
-ln -sf "$INSTALL_DIR/bin/pt.js" "$HOME/.local/bin/pt"
-chmod +x "$INSTALL_DIR/bin/pt.js"
-
-# Add to PATH if needed
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
-  export PATH="$HOME/.local/bin:$PATH"
-fi
+# Install globally from GitHub
+npm install -g "$REPO_URL"
 
 echo ""
 echo "Done! CLI installed: pt"
@@ -46,8 +26,8 @@ echo "Usage:"
 echo "  pt search ddg \"query\" 5"
 echo "  pt fetch https://example.com"
 echo ""
-echo "Add skill to your agent:"
-echo "  npx skills add https://github.com/truongezgg/playwright-tools"
+echo "To update:"
+echo "  npm install -g git+https://github.com/truongezgg/playwright-tools.git"
 echo ""
 echo "Optional: Start stealth server for Google/Bing without CAPTCHA:"
-echo "  cd $INSTALL_DIR && docker compose up -d"
+echo "  docker run -d -p 9222:9222 cloakhq/cloakbrowser cloakserve"

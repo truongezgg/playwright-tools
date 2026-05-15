@@ -1,0 +1,20 @@
+{
+  "name": "playwright-tools",
+  "version": "1.0.0",
+  "description": "CLI tools for web search and page fetching with stealth browser support",
+  "type": "module",
+  "bin": {
+    "pt-search": "./search.js",
+    "pt-fetch": "./fetch.js"
+  },
+  "scripts": {
+    "test": "node test.js",
+    "test:unit": "node test.js --unit",
+    "test:integration": "node test.js --integration"
+  },
+  "dependencies": {
+    "playwright-core": "^1.50.0"
+  },
+  "keywords": ["playwright", "search", "fetch", "stealth", "browser", "cdp"],
+  "license": "MIT"
+}

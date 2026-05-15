@@ -1,0 +1,133 @@
+#!/usr/bin/env node
+
+/**
+ * Fetch a web page using Playwright with stealth browser support.
+ *
+ * Usage:
+ *   pt-fetch [url] [options]
+ *
+ * Options:
+ *   --cdp URL       CDP server URL (default: http://localhost:9222)
+ *   --no-cloak      Force local Playwright (no CDP)
+ *   --snapshot       Output accessibility tree snapshot
+ *   --rawsnapshot    Output raw snapshot YAML
+ *   --selector CSS   Extract specific element
+ *   --headless       Headless mode for local browser
+ *   --timeout MS     Page load timeout (default: 15000)
+ *
+ * Examples:
+ *   pt-fetch https://example.com
+ *   pt-fetch https://example.com --snapshot
+ *   pt-fetch https://example.com --selector "article"
+ *   pt-fetch https://example.com --rawsnapshot
+ *   pt-fetch https://example.com --no-cloak --headless
+ */
+
+import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
+
+const args = process.argv.slice(2);
+const flags = args.filter(a => a.startsWith('--'));
+const params = args.filter(a => !a.startsWith('--'));
+
+const url = params[0];
+
+const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || 'http://localhost:9222';
+const noCloak = flags.includes('--no-cloak');
+const useSnapshot = flags.includes('--snapshot');
+const rawSnapshot = flags.includes('--rawsnapshot');
+const headless = flags.includes('--headless');
+const selector = flags.find(f => f.startsWith('--selector='))?.split('=')[1] || null;
+const timeout = parseInt(flags.find(f => f.startsWith('--timeout='))?.split('=')[1]) || 15000;
+
+if (!url) {
+  console.error('Usage: pt-fetch [url] [--cdp URL] [--no-cloak] [--snapshot] [--rawsnapshot] [--selector CSS] [--headless] [--timeout MS]');
+  console.error('Example: pt-fetch https://example.com');
+  console.error('       pt-fetch https://example.com --snapshot');
+  process.exit(1);
+}
+
+try {
+  // Connect to browser
+  const cdpOptions = noCloak ? {} : { cdpUrl };
+  const localOptions = { headless };
+  const { browser, source } = noCloak
+    ? await connectBrowser(localOptions)
+    : await connectBrowser({ ...cdpOptions, ...localOptions });
+
+  console.error(`Connected: ${source === 'cdp' ? 'Stealth server (CDP)' : 'Local Playwright'}`);
+
+  const page = await getPage(browser);
+
+  // Navigate
+  console.error(`Fetching: ${url}`);
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
+
+  // Wait for content to load
+  await page.waitForSelector('body', { timeout: 5000 }).catch(() => {});
+
+  let content;
+
+  if (rawSnapshot) {
+    // Raw snapshot mode
+    const snapshot = await page.accessibility.snapshot();
+    console.log(JSON.stringify(snapshot, null, 2));
+  } else if (useSnapshot) {
+    // Snapshot mode
+    const snapshot = await page.accessibility.snapshot();
+    // Extract text from snapshot
+    content = extractTextFromSnapshot(snapshot);
+    console.log(content);
+  } else if (selector) {
+    // Selector mode
+    content = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      return el ? el.innerText : `Element not found: ${sel}`;
+    }, selector);
+    console.log(content);
+  } else {
+    // Default: get page text
+    content = await page.evaluate(() => {
+      // Try to get main content
+      const article = document.querySelector('article');
+      const main = document.querySelector('main');
+      const content = document.querySelector('.content, .markdown, #content');
+      const target = article || main || content || document.body;
+      return target?.innerText?.substring(0, 10000) || 'No content found';
+    });
+    console.log(content);
+  }
+
+  await closeBrowser(browser, source);
+
+} catch (e) {
+  console.error('Error:', e.message);
+  process.exit(1);
+}
+
+/**
+ * Extract text from accessibility snapshot.
+ */
+function extractTextFromSnapshot(node, depth = 0) {
+  if (!node) return '';
+
+  let text = '';
+
+  // Add node text
+  if (node.name) {
+    text += '  '.repeat(depth) + node.name + '\n';
+  }
+
+  // Add value if present
+  if (node.value) {
+    text += '  '.repeat(depth) + `[${node.value}]\n`;
+  }
+
+  // Process children
+  if (node.children) {
+    for (const child of node.children) {
+      text += extractTextFromSnapshot(child, depth + 1);
+    }
+  }
+
+  return text;
+}

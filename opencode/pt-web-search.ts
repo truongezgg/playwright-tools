@@ -17,8 +17,9 @@ Example:
   },
   async execute(args) {
     try {
+      const engine = args.engine || "ddg"
       const limit = (args.limit || 5).toString()
-      const result = execSync(`pt search ${args.engine} ${args.query} ${limit}`, { encoding: "utf8" })
+      const result = execSync(`pt search ${engine} ${args.query} ${limit}`, { encoding: "utf8" })
       return result.trim()
     } catch (error: any) {
       return `Search failed: ${error.message}`

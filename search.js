@@ -52,24 +52,29 @@ if (!selectors[engine]) {
 const sel = selectors[engine];
 const url = urls[engine];
 
+// Clean text: strip private Unicode chars (U+E000-U+F8FF, U+F0000-U+FFFFF, U+100000-U+10FFFF)
+const cleanText = (s) => s.replace(/[\uE000-\uF8FF\u{F0000}-\u{FFFFF}\u{100000}-\u{10FFFF}]/gu, '').replace(/\s+/g, ' ').trim();
+
 // Eval extraction code
 const evalCode = {
   ddg: `(() => {
+    const clean = s => s.replace(/[\\uE000-\\uF8FF\\u{F0000}-\\u{FFFFF}\\u{100000}-\\u{10FFFF}]/gu, '').replace(/\\s+/g, ' ').trim();
     const articles = document.querySelectorAll('article');
     const results = [];
     for (const el of articles) {
       const titleA = el.querySelector('a[data-testid="result-title-a"]');
       if (!titleA) continue;
-      const title = titleA.querySelector('h2')?.innerText?.trim() || titleA.innerText?.trim();
+      const title = clean(titleA.innerText || '');
       const link = titleA.href;
-      const snippet = el.querySelector('div[data-result="snippet"]')?.innerText?.trim() || '';
+      const snippet = clean(el.querySelector('div[data-result="snippet"]')?.innerText || '');
       if (!title) continue;
-      if (title.includes('\\nAD') || link?.match(/duckduckgo\\.com\\/.*\\.js/)) continue;
+      if (title.includes('AD') || link?.match(/duckduckgo\\.com\\/.*\\.js/)) continue;
       results.push({ title, link, snippet });
     }
     return results.slice(0, ${count});
   })()`,
   google: `(() => {
+    const clean = s => s.replace(/[\\uE000-\\uF8FF\\u{F0000}-\\u{FFFFF}\\u{100000}-\\u{10FFFF}]/gu, '').replace(/\\s+/g, ' ').trim();
     const seen = new Set();
     const containers = document.querySelectorAll('div[data-hveid]');
     const results = [];
@@ -81,18 +86,19 @@ const evalCode = {
       if (seen.has(a.href)) continue;
       seen.add(a.href);
       results.push({
-        title: h3.innerText?.trim(),
+        title: clean(h3.innerText || ''),
         link: a.href,
-        snippet: c.querySelector('[data-sncf]')?.innerText?.trim() || '',
+        snippet: clean(c.querySelector('[data-sncf]')?.innerText || ''),
       });
     }
     return results.slice(0, ${count});
   })()`,
   bing: `(() => {
+    const clean = s => s.replace(/[\\uE000-\\uF8FF\\u{F0000}-\\u{FFFFF}\\u{100000}-\\u{10FFFF}]/gu, '').replace(/\\s+/g, ' ').trim();
     return [...document.querySelectorAll('li.b_algo')].map(el => ({
-      title: el.querySelector('h2')?.innerText?.trim(),
+      title: clean(el.querySelector('h2')?.innerText || ''),
       link: el.querySelector('h2 a')?.href,
-      snippet: el.querySelector('.b_caption p')?.innerText?.trim() || '',
+      snippet: clean(el.querySelector('.b_caption p')?.innerText || ''),
     }))
     .filter(r => r.title)
     .slice(0, ${count});

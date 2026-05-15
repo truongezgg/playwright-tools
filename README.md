@@ -24,9 +24,11 @@ npm install -g git+https://github.com/truongezgg/playwright-tools.git
 npx skills add https://github.com/truongezgg/playwright-tools
 ```
 
-**Step 3 — Stealth server (optional):**
+**Step 3 — Stealth server (optional, use at your own risk):**
 
-For Google/Bing without CAPTCHA, run [CloakBrowser](https://github.com/CloakHQ/cloakbrowser) in Docker:
+> **Note:** [CloakBrowser](https://github.com/CloakHQ/cloakbrowser) is a third-party project. Docker is recommended for isolation.
+
+For Google/Bing without CAPTCHA, run CloakBrowser in Docker:
 
 ```bash
 docker run -d -p 9222:9222 cloakhq/cloakbrowser cloakserve

@@ -72,7 +72,8 @@ pt search bing "query" 3 --snapshot  # Stable extraction
 ```bash
 pt fetch https://example.com
 pt fetch https://example.com --selector "article"
-pt fetch https://example.com --snapshot
+pt fetch https://example.com --format=text
+pt fetch https://example.com --format=html
 ```
 
 ## Options
@@ -85,7 +86,8 @@ pt fetch https://example.com --snapshot
 | `--no-cloak`     | Skip CDP                | false            |
 | `--eval`         | JavaScript extraction   | default          |
 | `--snapshot`     | Accessibility tree      | -                |
-| `--rawsnapshot`  | Raw YAML                | -                |
+| `--rawsnapshot`  | Raw JSON                | -                |
+| `--format FMT`   | Fetch output: markdown/text/html | `markdown` |
 | `--selector CSS` | Extract element (fetch) | -                |
 | `--timeout MS`   | Load timeout (fetch)    | `15000`          |
 

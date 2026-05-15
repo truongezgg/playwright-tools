@@ -52,9 +52,10 @@ Search Options:
   --rawsnapshot   Raw YAML output
 
 Fetch Options:
+  --format FMT     Output format: markdown, text, html (default: markdown)
   --selector CSS   Extract specific element
-  --snapshot       Accessibility tree extraction
-  --rawsnapshot    Raw YAML output
+  --snapshot       Accessibility tree extraction (text format only)
+  --rawsnapshot    Raw JSON output
   --headless       No browser window (default)
   --cdp URL        CDP server URL (default: http://localhost:9222)
   --no-cloak       Skip CDP, use local browser

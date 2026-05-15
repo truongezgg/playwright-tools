@@ -2,6 +2,7 @@
 
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
 import { getConfig } from './lib/config.js';
+import TurndownService from 'turndown';
 
 const args = process.argv.slice(2);
 const flags = args.filter(a => a.startsWith('--'));
@@ -16,15 +17,34 @@ const rawSnapshot = flags.includes('--rawsnapshot');
 const headless = flags.includes('--headless');
 const selector = flags.find(f => f.startsWith('--selector='))?.split('=')[1] || null;
 const timeout = parseInt(flags.find(f => f.startsWith('--timeout='))?.split('=')[1]) || 15000;
+const format = flags.find(f => f.startsWith('--format='))?.split('=')[1] || 'markdown';
+
+// Turndown for HTML→Markdown
+const turndown = new TurndownService({
+  headingStyle: 'atx',
+  hr: '---',
+  bulletListMarker: '-',
+  codeBlockStyle: 'fenced',
+  emDelimiter: '*',
+});
+turndown.remove(['script', 'style', 'meta', 'link']);
 
 if (!url) {
-  console.error('Usage: pt-fetch <url> [options]');
-  console.error('Run "pt-fetch --help" for more info');
+  console.error('Usage: pt fetch <url> [options]');
+  console.error('Run "pt --help" for more info');
   process.exit(1);
 }
 
+// Response helper (matches OpenCode webfetch format)
+function respond(output, metadata = {}) {
+  console.log(JSON.stringify({ output, title: url, metadata }, null, 2));
+}
+
+function errorResponse(message) {
+  console.log(JSON.stringify({ output: `Error: ${message}`, title: url, metadata: { error: true } }, null, 2));
+}
+
 try {
-  // Connect to browser
   const cdpOptions = noCloak ? {} : { cdpUrl };
   const localOptions = { headless };
   const { browser, source } = noCloak
@@ -35,62 +55,89 @@ try {
 
   const page = await getPage(browser);
 
-  // Navigate
   console.error(`Fetching: ${url}`);
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout });
 
-  // Wait for content to load
   await page.waitForSelector('body', { timeout: 5000 }).catch(() => {});
 
-  let content;
-
-  // Check if accessibility API is available
   const hasAccessibility = typeof page.accessibility?.snapshot === 'function';
 
+  // Raw snapshot mode (always JSON, no format)
   if (rawSnapshot) {
-    // Raw snapshot mode
     if (!hasAccessibility) {
-      console.error('Accessibility API not available with this browser. Use a different mode or install Playwright browsers.');
       await closeBrowser(browser, source);
+      errorResponse('Accessibility API not available. Use --no-cloak or install Playwright browsers.');
       process.exit(1);
     }
     const snapshot = await page.accessibility.snapshot();
-    console.log(JSON.stringify(snapshot, null, 2));
-  } else if (useSnapshot) {
-    // Snapshot mode
+    respond(JSON.stringify(snapshot, null, 2), { format: 'rawsnapshot' });
+    await closeBrowser(browser, source);
+    process.exit(0);
+  }
+
+  // Snapshot mode (only for text format)
+  if (useSnapshot && format === 'text') {
     if (!hasAccessibility) {
-      console.error('Accessibility API not available, falling back to page text...');
-      content = await page.evaluate(() => document.body?.innerText?.substring(0, 10000) || 'No content');
-      console.log(content);
+      console.error('Accessibility API not available, falling back to DOM extraction...');
     } else {
       const snapshot = await page.accessibility.snapshot();
-      content = extractTextFromSnapshot(snapshot);
-      console.log(content);
+      const content = extractTextFromSnapshot(snapshot);
+      respond(content, { format: 'text', method: 'snapshot' });
+      await closeBrowser(browser, source);
+      process.exit(0);
     }
-  } else if (selector) {
-    // Selector mode
-    content = await page.evaluate((sel) => {
-      const el = document.querySelector(sel);
-      return el ? el.innerText : `Element not found: ${sel}`;
-    }, selector);
-    console.log(content);
-  } else {
-    // Default: get page text
-    content = await page.evaluate(() => {
-      // Try to get main content
-      const article = document.querySelector('article');
-      const main = document.querySelector('main');
-      const content = document.querySelector('.content, .markdown, #content');
-      const target = article || main || content || document.body;
-      return target?.innerText?.substring(0, 10000) || 'No content found';
-    });
-    console.log(content);
   }
+
+  // DOM extraction
+  const extractFn = (sel) => {
+    if (sel) {
+      // Selector mode
+      const el = document.querySelector(sel);
+      if (!el) return { error: `Element not found: ${sel}` };
+      return {
+        html: el.innerHTML,
+        text: el.innerText,
+      };
+    }
+    // Default: find main content area
+    const article = document.querySelector('article');
+    const main = document.querySelector('main');
+    const contentEl = document.querySelector('.content, .markdown, #content');
+    const target = article || main || contentEl || document.body;
+    return {
+      html: target?.innerHTML || '',
+      text: target?.innerText || '',
+    };
+  };
+
+  const extracted = await page.evaluate(extractFn, selector);
+
+  if (extracted.error) {
+    await closeBrowser(browser, source);
+    errorResponse(extracted.error);
+    process.exit(1);
+  }
+
+  let content;
+  switch (format) {
+    case 'html':
+      content = extracted.html.substring(0, 50000);
+      break;
+    case 'markdown':
+      content = turndown.turndown(extracted.html).substring(0, 50000);
+      break;
+    case 'text':
+    default:
+      content = extracted.text.substring(0, 10000);
+      break;
+  }
+
+  respond(content, { format });
 
   await closeBrowser(browser, source);
 
 } catch (e) {
-  console.error('Error:', e.message);
+  errorResponse(e.message);
   process.exit(1);
 }
 
@@ -102,17 +149,14 @@ function extractTextFromSnapshot(node, depth = 0) {
 
   let text = '';
 
-  // Add node text
   if (node.name) {
     text += '  '.repeat(depth) + node.name + '\n';
   }
 
-  // Add value if present
   if (node.value) {
     text += '  '.repeat(depth) + `[${node.value}]\n`;
   }
 
-  // Process children
   if (node.children) {
     for (const child of node.children) {
       text += extractTextFromSnapshot(child, depth + 1);

@@ -8,16 +8,19 @@ export default tool({
 
 Example:
   url="https://example.com"
-  url="https://example.com" selector="article"`,
+  url="https://example.com" selector="article"
+  url="https://example.com" format="text"`,
   args: {
     url: tool.schema.string().describe("URL to fetch"),
     selector: tool.schema.string().optional().describe("CSS selector to extract specific element (optional)"),
+    format: tool.schema.enum(["text", "markdown", "html"]).optional().describe("Output format (default: markdown)").default("markdown"),
     snapshot: tool.schema.boolean().optional().describe("Return accessibility tree instead of text (default: false)").default(false),
   },
   async execute(args) {
     try {
       const flags: string[] = []
       if (args.selector) flags.push(`--selector=${args.selector}`)
+      if (args.format && args.format !== 'markdown') flags.push(`--format=${args.format}`)
       if (args.snapshot) flags.push("--snapshot")
       const result = await Bun.$`pt fetch ${args.url} ${flags}`.text()
       return result.trim()

@@ -12,8 +12,16 @@
     "test:integration": "node test.js --integration"
   },
   "dependencies": {
-    "playwright-core": "^1.50.0"
+    "playwright-core": "^1.50.0",
+    "turndown": "^7.2.4"
   },
-  "keywords": ["playwright", "search", "fetch", "stealth", "browser", "cdp"],
+  "keywords": [
+    "playwright",
+    "search",
+    "fetch",
+    "stealth",
+    "browser",
+    "cdp"
+  ],
   "license": "MIT"
 }

@@ -9,6 +9,7 @@ set -e
 
 INSTALL_DIR="$HOME/.playwright-tools"
 SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
+ORIG_DIR="$(pwd)"
 
 if [ -d "$INSTALL_DIR" ]; then
   # curl install: git pull (stash local changes first)
@@ -35,7 +36,7 @@ if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then
 fi
 
 # Sync OpenCode tools if .opencode/tools/ exists in current directory
-OPENCODE_DIR="$(pwd)/.opencode/tools"
+OPENCODE_DIR="${ORIG_DIR}/.opencode/tools"
 if [ -d "$OPENCODE_DIR" ] && [ -d "$INSTALL_DIR/opencode" ]; then
   echo "Syncing OpenCode tools..."
   cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_DIR/"

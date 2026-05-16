@@ -1,6 +1,6 @@
 {
   "name": "playwright-tools",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI tools for web search and page fetching with stealth browser support",
   "type": "module",
   "bin": {

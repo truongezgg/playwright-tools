@@ -15,6 +15,7 @@ const cdpUrl = flags.find(f => f.startsWith('--cdp='))?.split('=')[1] || getConf
 const noCloak = flags.includes('--no-cloak');
 const useSnapshot = flags.includes('--snapshot');
 const rawSnapshot = flags.includes('--rawsnapshot');
+const verbose = flags.includes('--verbose');
 const headless = flags.includes('--headless');
 const selector = flags.find(f => f.startsWith('--selector='))?.split('=')[1] || null;
 const timeout = parseInt(flags.find(f => f.startsWith('--timeout='))?.split('=')[1]) || 15000;
@@ -35,6 +36,9 @@ if (!url) {
   console.error('Run "pt --help" for more info');
   process.exit(1);
 }
+
+// Suppress debug logs unless --verbose
+if (!verbose) console.error = () => {};
 
 // Response helper (matches OpenCode webfetch format)
 function respond(output, metadata = {}) {

@@ -15,11 +15,12 @@ const noCloak = flags.includes('--no-cloak');
 const useEval = flags.includes('--eval');
 const rawSnapshot = flags.includes('--rawsnapshot');
 const jsonMode = flags.includes('--json');
+const verbose = flags.includes('--verbose');
 const explicitHeadless = flags.includes('--headless');
 const explicitHeaded = flags.includes('--headed');
 
-// Suppress status output in JSON mode
-if (jsonMode) console.error = () => {};
+// Suppress debug logs unless --verbose or --json (stderr in json mode goes to nowhere anyway)
+if (!verbose && !jsonMode) console.error = () => {};
 
 const engine = params[0] || 'ddg';
 const query = params[1];

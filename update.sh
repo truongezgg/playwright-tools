@@ -11,22 +11,10 @@ INSTALL_DIR="$HOME/.playwright-tools"
 SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 ORIG_DIR="$(pwd)"
 
-if [ -d "$INSTALL_DIR" ]; then
-  # curl install: git pull (stash local changes first)
-  echo "Updating Playwright Tools (git)..."
-  cd "$INSTALL_DIR"
-  git stash --quiet 2>/dev/null || true
-  git pull --quiet
-  git stash pop --quiet 2>/dev/null || true
-  npm install --production --quiet
-  echo "Updated to: $(git log --oneline -1)"
-else
-  # npm -g install: reinstall (--prefer-online bypasses cache for git URLs)
-  echo "Updating Playwright Tools (npm)..."
-  npm install -g --prefer-online git+https://github.com/truongezgg/playwright-tools.git
-  # Find install dir from npm
-  INSTALL_DIR="$(npm root -g)/playwright-tools"
-fi
+echo "Updating Playwright Tools..."
+npm install -g --force git+https://github.com/truongezgg/playwright-tools.git
+INSTALL_DIR="$(npm root -g)/playwright-tools"
+echo "Updated to: $(cat "$INSTALL_DIR/package.json" | grep version | head -1)"
 
 # Update skill
 if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then

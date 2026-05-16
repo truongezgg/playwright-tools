@@ -14,6 +14,7 @@ Engines:
   ddg: DuckDuckGo - headless by default, fastest, least likely to block
   google: Google - best results, may need --headed for CAPTCHA
   bing: Bing - good alternative, intermediate blocking risk
+  exa: Exa - semantic/neural search, best for brand/topic queries, uses cached token
 
 Search types:
   auto: balanced search (default)
@@ -21,7 +22,7 @@ Search types:
   deep: comprehensive search (10 results, tries Google first)`,
   args: {
     query: tool.schema.string().describe("Search query"),
-    engine: tool.schema.enum(["ddg", "google", "bing"]).describe("Search engine to use").default("ddg"),
+    engine: tool.schema.enum(["ddg", "google", "bing", "exa"]).describe("Search engine to use").default("ddg"),
     limit: tool.schema.number().describe("Number of results to return (default: 5)").default(5),
     type: tool.schema.enum(["auto", "fast", "deep"]).describe("Search type: auto (default), fast (quick), deep (comprehensive)").default("auto"),
   },

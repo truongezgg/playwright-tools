@@ -3,6 +3,8 @@
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
 import { parseSnapshot, snapshotToYaml } from './lib/snapshot.js';
 import { getConfig } from './lib/config.js';
+import { analyzeBlockedPage } from './lib/bot-detection.js';
+import { getToken } from './lib/exa-token.js';
 
 const args = process.argv.slice(2);
 const flags = args.filter(a => a.startsWith('--'));
@@ -29,12 +31,14 @@ const urls = {
   ddg: `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
   google: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
   bing: `https://www.bing.com/search?q=${encodeURIComponent(query)}`,
+  exa: 'https://exa.ai/search',
 };
 
 const selectors = {
   ddg: { container: 'article' },
   google: { container: 'h3' },
   bing: { container: 'li.b_algo' },
+  exa: { container: null },
 };
 
 const sel = selectors[engine];
@@ -55,8 +59,8 @@ if (!query) {
   process.exit(1);
 }
 
-if (!sel) {
-  errorResponse(`Unknown engine: ${engine}. Use: ddg, google, bing`);
+if (!sel && engine !== 'exa') {
+  errorResponse(`Unknown engine: ${engine}. Use: ddg, google, bing, exa`);
   process.exit(1);
 }
 
@@ -124,29 +128,96 @@ try {
 
   const page = await getPage(browser, source);
 
+  // Exa engine: API-based, different flow
+  if (engine === 'exa') {
+    console.error(`Searching exa: "${query}"`);
+
+    const token = await getToken(page);
+
+    const apiResult = await page.evaluate(async ({ tok, q, n }) => {
+      const r = await fetch('https://exa.ai/search/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + tok,
+        },
+        body: JSON.stringify({
+          query: q,
+          type: 'auto',
+          num_results: n,
+        }),
+      });
+      return { status: r.status, body: await r.text() };
+    }, { tok: token, q: query, n: count });
+
+    if (apiResult.status !== 200) {
+      await closeBrowser(browser, source);
+      errorResponse(`Exa API error: HTTP ${apiResult.status}`);
+      process.exit(1);
+    }
+
+    // Streaming response: first line is the main result
+    const firstLine = apiResult.body.split('\n').find(line => {
+      try { const o = JSON.parse(line); return o.type === 'search_results'; } catch { return false; }
+    });
+
+    if (!firstLine) {
+      await closeBrowser(browser, source);
+      errorResponse('Exa: no search_results in response');
+      process.exit(1);
+    }
+
+    const data = JSON.parse(firstLine);
+    const results = (data.data?.results || []).map(r => ({
+      title: r.title || '',
+      link: r.url || '',
+      snippet: r.text || '',
+    }));
+
+    respond({ success: true, engine: 'exa', query, limit: count, results });
+    console.error(`Found ${results.length} results`);
+
+    await closeBrowser(browser, source);
+    process.exit(0);
+  }
+
+  // DDG/Google/Bing flow
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
   console.error(`Searching ${engine}: "${query}"`);
+
+  // Early bot detection — check before waiting for results
+  const earlyBodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 1000) || '');
+  const earlyCheck = analyzeBlockedPage(earlyBodyText, false);
+  if (earlyCheck.blocked) {
+    if (source === 'local' || source === 'chrome') {
+      console.error(`Bot challenge detected (${earlyCheck.keywords.join(', ')}). Please solve it in the browser. Press Enter when done...`);
+      process.stdin.resume();
+      await new Promise(resolve => process.stdin.once('data', resolve));
+    } else {
+      await closeBrowser(browser, source);
+      errorResponse(`Bot challenge detected: ${earlyCheck.keywords.join(', ')}. Use --no-cloak to open local browser for solving.`);
+      process.exit(1);
+    }
+  }
 
   const waitTimeout = engine === 'ddg' ? 10000 : 20000;
   try {
     await page.waitForSelector(sel.container, { timeout: waitTimeout });
   } catch (e) {
-    const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 500) || '');
-    const hasCaptcha = bodyText.includes('/sorry/') ||
-                       bodyText.includes('solve the challenge') ||
-                       bodyText.includes('Select all squares') ||
-                       bodyText.includes('captcha') ||
-                       bodyText.includes('CAPTCHA');
+    // Re-check with full page content after timeout
+    const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 2000) || '');
+    const hasResults = await page.evaluate((sel) => document.querySelectorAll(sel).length > 0, sel.container);
+    const check = analyzeBlockedPage(bodyText, hasResults);
 
-    if (hasCaptcha) {
+    if (check.blocked) {
       if (source === 'local' || source === 'chrome') {
-        console.error('CAPTCHA detected! Please solve it in the browser. Press Enter when done...');
+        console.error(`Bot challenge detected (${check.keywords.join(', ')}). Please solve it in the browser. Press Enter when done...`);
         process.stdin.resume();
         await new Promise(resolve => process.stdin.once('data', resolve));
         await page.waitForSelector(sel.container, { timeout: 20000 });
       } else {
         await closeBrowser(browser, source);
-        errorResponse('CAPTCHA detected. Use --no-cloak to open local browser for solving.');
+        errorResponse(`Bot challenge detected: ${check.keywords.join(', ')}. Use --no-cloak to open local browser for solving.`);
         process.exit(1);
       }
     } else {

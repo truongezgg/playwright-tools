@@ -2,6 +2,7 @@
 
 import { connectBrowser, getPage, closeBrowser } from './lib/browser.js';
 import { getConfig } from './lib/config.js';
+import { looksLikeBotChallenge } from './lib/bot-detection.js';
 import TurndownService from 'turndown';
 
 const args = process.argv.slice(2);
@@ -60,6 +61,14 @@ try {
 
   await page.waitForSelector('body', { timeout: 5000 }).catch(() => {});
 
+  // Bot challenge detection — check before extracting content
+  const bodyText = await page.evaluate(() => document.body?.innerText?.substring(0, 2000) || '');
+  if (looksLikeBotChallenge(bodyText)) {
+    await closeBrowser(browser, source);
+    errorResponse('Bot challenge or CAPTCHA detected. Site may be blocking automated access. Try --no-cloak for local browser.');
+    process.exit(1);
+  }
+
   const hasAccessibility = typeof page.accessibility?.snapshot === 'function';
 
   // Raw snapshot mode (always JSON, no format)
@@ -88,47 +97,65 @@ try {
     }
   }
 
-  // DOM extraction
-  const extractFn = (sel) => {
-    if (sel) {
-      // Selector mode - try to find element
+  // DOM extraction with multi-selector cascade and minimum content length
+  const SELECTORS = [
+    'article',
+    'main',
+    '[role="main"]',
+    '.markdown-body',
+    '.article-content',
+    '.post-content',
+    '.entry-content',
+    '.content',
+    '.markdown',
+    '#content',
+  ];
+  const MIN_CONTENT_LENGTH = 120;
+
+  const extractFn = (customSel, selectors, minLen) => {
+    if (customSel) {
+      const el = document.querySelector(customSel);
+      if (el) {
+        return { html: el.innerHTML, text: el.innerText };
+      }
+      return { found: false, selector: customSel };
+    }
+
+    // Cascade through selectors, skip empty/short containers
+    for (const sel of selectors) {
       const el = document.querySelector(sel);
       if (el) {
-        return {
-          html: el.innerHTML,
-          text: el.innerText,
-        };
+        const text = (el.innerText || '').trim();
+        if (text.length >= minLen) {
+          return { html: el.innerHTML, text };
+        }
       }
-      // Selector not found - return null to trigger fallback to full page
-      return { found: false, selector: sel };
     }
-    // Default: find main content area
-    const article = document.querySelector('article');
-    const main = document.querySelector('main');
-    const contentEl = document.querySelector('.content, .markdown, #content');
-    const target = article || main || contentEl || document.body;
-    return {
-      html: target?.innerHTML || '',
-      text: target?.innerText || '',
-    };
+
+    // Fallback: body
+    const body = document.body;
+    const bodyText = (body?.innerText || '').trim();
+
+    // SPA fallback: title + meta description
+    if (bodyText.length < minLen) {
+      const title = document.title || '';
+      const meta = document.querySelector('meta[name="description"]')?.content || '';
+      const ogDesc = document.querySelector('meta[property="og:description"]')?.content || '';
+      const desc = meta || ogDesc;
+      if (title || desc) {
+        return { html: `<h1>${title}</h1><p>${desc}</p>`, text: [title, desc].filter(Boolean).join('\n\n'), spa: true };
+      }
+    }
+
+    return { html: body?.innerHTML || '', text: bodyText };
   };
 
-  const extracted = await page.evaluate(extractFn, selector);
+  const extracted = await page.evaluate(extractFn, selector, SELECTORS, MIN_CONTENT_LENGTH);
 
-  // If selector was specified but element not found, fallback to full page
+  // If selector was specified but element not found, fallback to cascade
   if (selector && !extracted.found) {
-    console.error(`Selector "${selector}" not found, using full page`);
-    const fallbackFn = () => {
-      const article = document.querySelector('article');
-      const main = document.querySelector('main');
-      const contentEl = document.querySelector('.content, .markdown, #content');
-      const target = article || main || contentEl || document.body;
-      return {
-        html: target?.innerHTML || '',
-        text: target?.innerText || '',
-      };
-    };
-    const fallback = await page.evaluate(fallbackFn);
+    console.error(`Selector "${selector}" not found, using cascade fallback`);
+    const fallback = await page.evaluate(extractFn, null, SELECTORS, MIN_CONTENT_LENGTH);
     extracted.html = fallback.html;
     extracted.text = fallback.text;
   }

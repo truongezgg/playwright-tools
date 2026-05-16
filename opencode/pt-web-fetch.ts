@@ -6,19 +6,21 @@ export default tool({
 - Uses remote CDP stealth browser (cloakbrowser) to bypass Cloudflare and bot detection
 - Renders JavaScript SPAs before extracting content
 - Returns full page content in markdown, text, or HTML format
+- GitHub URLs: fetches raw content directly (fast, no browser needed)
 - Use this when built-in webfetch fails (403, empty response, JS-rendered pages)
 
 IMPORTANT: prefer built-in webfetch for simple pages. Use this for:
   - Cloudflare-protected sites
   - JavaScript-heavy SPAs that return empty content without rendering
   - Sites requiring browser-level stealth
-
-For GitHub URLs, prefer using gh CLI via Bash instead (e.g., gh pr view, gh api).
+  - GitHub repository/file URLs (handled automatically)
 
 Examples:
   url="https://example.com"
   url="https://example.com" selector="article"
   url="https://example.com" format="text"
+  url="https://github.com/owner/repo"
+  url="https://github.com/owner/repo/blob/main/file.js"
   url="https://example.com" timeout=60`,
   args: {
     url: tool.schema.string().describe("URL to fetch"),

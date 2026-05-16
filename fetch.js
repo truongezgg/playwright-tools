@@ -31,6 +31,60 @@ const turndown = new TurndownService({
 });
 turndown.remove(['script', 'style', 'meta', 'link']);
 
+// GitHub raw fetch — skip browser for GitHub URLs
+const README_CANDIDATES = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'README', 'readme'];
+
+function parseGithubUrl(input) {
+  try {
+    const u = new URL(input);
+    // raw.githubusercontent.com — already raw
+    if (u.hostname === 'raw.githubusercontent.com') {
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (parts.length >= 3) {
+        return { owner: parts[0], repo: parts[1], branch: parts[2], path: parts.slice(3).join('/'), type: 'raw' };
+      }
+    }
+    // github.com
+    if (u.hostname === 'github.com') {
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (parts.length < 2) return null;
+      const [owner, repo, kind, branch, ...rest] = parts;
+      if (kind === 'blob' || kind === 'raw') {
+        return { owner, repo, branch, path: rest.join('/'), type: 'file' };
+      }
+      if (kind === 'tree') {
+        return { owner, repo, branch, path: rest.join('/'), type: 'dir' };
+      }
+      // Repo root
+      return { owner, repo, branch: 'HEAD', path: '', type: 'repo' };
+    }
+  } catch {}
+  return null;
+}
+
+async function fetchGithubRaw(owner, repo, branch, path) {
+  const encode = encodeURIComponent;
+  if (!path) {
+    // Repo URL — try README candidates
+    for (const name of README_CANDIDATES) {
+      const rawUrl = `https://raw.githubusercontent.com/${encode(owner)}/${encode(repo)}/${encode(branch)}/${name}`;
+      console.error(`Trying GitHub raw: ${rawUrl}`);
+      try {
+        const r = await fetch(rawUrl, { redirect: 'follow' });
+        if (r.ok) return await r.text();
+      } catch {}
+    }
+    return null;
+  }
+  const rawUrl = `https://raw.githubusercontent.com/${encode(owner)}/${encode(repo)}/${encode(branch)}/${encode(path)}`;
+  console.error(`Fetching GitHub raw: ${rawUrl}`);
+  try {
+    const r = await fetch(rawUrl, { redirect: 'follow' });
+    if (r.ok) return await r.text();
+  } catch {}
+  return null;
+}
+
 if (!url) {
   console.error('Usage: pt fetch <url> [options]');
   console.error('Run "pt --help" for more info');
@@ -39,6 +93,21 @@ if (!url) {
 
 // Suppress debug logs unless --verbose
 if (!verbose) console.error = () => {};
+
+// GitHub raw fetch — fast path, skip browser
+const ghInfo = parseGithubUrl(url);
+if (ghInfo && ghInfo.type !== 'dir') {
+  const raw = await fetchGithubRaw(ghInfo.owner, ghInfo.repo, ghInfo.branch, ghInfo.path);
+  if (raw) {
+    let content = raw;
+    if (format === 'markdown' && (ghInfo.path.endsWith('.html') || ghInfo.path.endsWith('.htm'))) {
+      content = turndown.turndown(raw);
+    }
+    respond(content.substring(0, 50000), { format, method: 'github-raw' });
+    process.exit(0);
+  }
+  console.error('GitHub raw fetch failed, falling back to browser...');
+}
 
 // Response helper (matches OpenCode webfetch format)
 function respond(output, metadata = {}) {

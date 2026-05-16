@@ -39,8 +39,8 @@ Search types:
         limit = Math.max(limit, 10)
       }
 
-      // Sanitize query to prevent shell injection
-      const safeQuery = args.query.replace(/["`$\\]/g, '\\$&')
+      // Sanitize query to prevent shell injection (query is in double quotes)
+      const safeQuery = args.query.replace(/["$`\\]/g, '\\$&').replace(/\n/g, ' ')
       const result = execSync(`pt search ${engine} "${safeQuery}" ${limit}`, { encoding: "utf8", timeout: 30000 })
 
       // Parse JSON output

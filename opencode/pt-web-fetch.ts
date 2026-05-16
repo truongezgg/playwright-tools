@@ -35,7 +35,8 @@ Examples:
       if (args.snapshot) flags.push("--snapshot")
       if (args.timeout && args.timeout !== 30) flags.push(`--timeout=${args.timeout * 1000}`)
       const cmd = `pt fetch ${args.url} ${flags.join(' ')}`
-      const result = execSync(cmd, { encoding: "utf8", timeout: (args.timeout || 30) * 1000 + 5000 })
+      const execTimeout = (args.timeout || 30) * 1000 + 5000
+      const result = execSync(cmd, { encoding: "utf8", timeout: execTimeout })
 
       // Parse JSON output from pt fetch
       let data: any
@@ -49,7 +50,7 @@ Examples:
       if (data.metadata?.error) {
         const err = data.output || "Unknown error"
         // Clean error messages
-        if (err.includes("CAPTCHA") || err.includes("blocked")) {
+        if (err.includes("CAPTCHA")) {
           return `Site blocked or CAPTCHA detected for ${args.url}. Content may require manual browser access.`
         }
         if (err.includes("timeout") || err.includes("Timeout")) {

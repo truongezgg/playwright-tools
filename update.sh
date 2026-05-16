@@ -21,8 +21,9 @@ if [ -d "$INSTALL_DIR" ]; then
   npm install --production --quiet
   echo "Updated to: $(git log --oneline -1)"
 else
-  # npm -g install: reinstall
+  # npm -g install: reinstall (clean cache to get latest commit)
   echo "Updating Playwright Tools (npm)..."
+  npm cache clean --force 2>/dev/null || true
   npm install -g git+https://github.com/truongezgg/playwright-tools.git
   # Find install dir from npm
   INSTALL_DIR="$(npm root -g)/playwright-tools"

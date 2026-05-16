@@ -39,13 +39,13 @@ pt update
 
 ## Commands
 
-| Command                              | Description              |
-| ------------------------------------ | ------------------------ |
-| `pt search <engine> <query> [count]` | Search DDG, Google, Bing |
-| `pt fetch <url>`                     | Fetch page content       |
-| `pt update`                          | Update to latest version |
-| `pt --help`                          | Show help                |
-| `pt --version`                       | Show version             |
+| Command                              | Description                     |
+| ------------------------------------ | ------------------------------- |
+| `pt search <engine> <query> [count]` | Search DDG, Google, Bing, Exa |
+| `pt fetch <url>`                     | Fetch page content              |
+| `pt update`                          | Update to latest version        |
+| `pt --help`                          | Show help                       |
+| `pt --version`                       | Show version                    |
 
 ### Search Engines
 
@@ -54,11 +54,13 @@ pt update
 | DuckDuckGo | OK       | OK     | OK         |
 | Google     | blocked  | OK     | OK         |
 | Bing       | blocked  | OK     | OK         |
+| Exa        | OK       | OK     | OK         |
 
 ```bash
 pt search ddg "query" 5              # Headless, fast
 pt search google "query" 10 --headed # Headed, CAPTCHA solving
 pt search bing "query" 3 --snapshot  # Stable extraction
+pt search exa "query" 5              # Semantic/neural search
 ```
 
 ### Fetch
@@ -84,6 +86,7 @@ pt fetch https://example.com --format=html
 | `--format FMT`   | Fetch output: markdown/text/html | `markdown`       |
 | `--selector CSS` | Extract element (fetch)          | -                |
 | `--timeout MS`   | Load timeout (fetch)             | `15000`          |
+| `--verbose`      | Show debug logs                  | off              |
 
 ## Stealth Server
 

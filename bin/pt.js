@@ -41,6 +41,7 @@ Search Engines:
   ddg        DuckDuckGo (headless by default)
   google     Google (headed by default)
   bing       Bing (headed by default)
+  exa        Exa semantic/neural search
 
 Search Options:
   --headed        Visible browser (for CAPTCHA solving)
@@ -50,6 +51,7 @@ Search Options:
   --eval          JavaScript extraction (default)
   --snapshot      Accessibility tree (local browser only)
   --rawsnapshot   Raw YAML output
+  --verbose       Show debug logs
 
 Fetch Options:
   --format FMT     Output format: markdown, text, html (default: markdown)
@@ -60,10 +62,12 @@ Fetch Options:
   --cdp URL        CDP server URL (default: http://localhost:9222)
   --no-cloak       Skip CDP, use local browser
   --timeout MS     Page load timeout (default: 15000)
+  --verbose        Show debug logs
 
 Examples:
   pt search ddg "query" 5
   pt search google "query" 10 --headed
+  pt search exa "query" 5
   pt fetch https://example.com
   pt fetch https://example.com --selector "article"
   pt update

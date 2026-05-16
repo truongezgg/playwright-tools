@@ -24,10 +24,10 @@ if [ "$REMOTE_HEAD" = "$INSTALLED_HEAD" ] && [ -n "$REMOTE_HEAD" ]; then
   echo "Already up to date (commit ${REMOTE_HEAD:0:7})."
 else
   echo "Updating Playwright Tools..."
-  npm install -g --force --prefer-online "git+$REPO_URL"
+  npm install -g --force "git+$REPO_URL#$REMOTE_HEAD"
   INSTALL_DIR="$(npm root -g)/playwright-tools"
   echo "$REMOTE_HEAD" > "$INSTALL_DIR/.commit"
-  echo "Updated to: $(cat "$INSTALL_DIR/package.json" | grep version | head -1)"
+  echo "Updated to: $(cat "$INSTALL_DIR/package.json" | grep version | head -1) (${REMOTE_HEAD:0:7})"
 fi
 
 # Update skill

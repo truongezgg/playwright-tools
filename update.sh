@@ -11,10 +11,24 @@ INSTALL_DIR="$HOME/.playwright-tools"
 SKILL_DIR="${SKILL_DIR:-$HOME/.agents/skills}"
 ORIG_DIR="$(pwd)"
 
-echo "Updating Playwright Tools..."
-npm install -g --force git+https://github.com/truongezgg/playwright-tools.git
+REPO_URL="https://github.com/truongezgg/playwright-tools.git"
+REMOTE_HEAD=$(git ls-remote "$REPO_URL" HEAD 2>/dev/null | cut -f1)
+
 INSTALL_DIR="$(npm root -g)/playwright-tools"
-echo "Updated to: $(cat "$INSTALL_DIR/package.json" | grep version | head -1)"
+INSTALLED_HEAD=""
+if [ -f "$INSTALL_DIR/.commit" ]; then
+  INSTALLED_HEAD=$(cat "$INSTALL_DIR/.commit")
+fi
+
+if [ "$REMOTE_HEAD" = "$INSTALLED_HEAD" ] && [ -n "$REMOTE_HEAD" ]; then
+  echo "Already up to date (commit ${REMOTE_HEAD:0:7})."
+else
+  echo "Updating Playwright Tools..."
+  npm install -g --force --prefer-online "git+$REPO_URL"
+  INSTALL_DIR="$(npm root -g)/playwright-tools"
+  echo "$REMOTE_HEAD" > "$INSTALL_DIR/.commit"
+  echo "Updated to: $(cat "$INSTALL_DIR/package.json" | grep version | head -1)"
+fi
 
 # Update skill
 if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then

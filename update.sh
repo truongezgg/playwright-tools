@@ -32,20 +32,44 @@ fi
 
 # Update skill
 if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then
-  echo "Updating skill..."
-  mkdir -p "$SKILL_DIR"
-  rm -rf "$SKILL_DIR/playwright-tools"
-  cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+  if [ -d "$SKILL_DIR/playwright-tools" ]; then
+    echo "Updating skill..."
+    rm -rf "$SKILL_DIR/playwright-tools"
+    cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+    echo "  Updated: $SKILL_DIR/playwright-tools"
+  else
+    read -p "Install skill? [y/N] " INSTALL_SKILL
+    INSTALL_SKILL=${INSTALL_SKILL:-N}
+    if [[ "$INSTALL_SKILL" =~ ^[Yy]$ ]]; then
+      mkdir -p "$SKILL_DIR"
+      cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+      echo "  Installed: $SKILL_DIR/playwright-tools"
+    else
+      echo "  Skipped."
+    fi
+  fi
 fi
 
 # Sync OpenCode tools to global config
 OPENCODE_GLOBAL="$HOME/.config/opencode/tools"
 if [ -d "$INSTALL_DIR/opencode" ]; then
-  mkdir -p "$OPENCODE_GLOBAL"
-  echo "Syncing OpenCode tools to global config..."
-  cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
-  cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
-  echo "  Synced: pt-web-search.ts, pt-web-fetch.ts"
+  if [ -f "$OPENCODE_GLOBAL/pt-web-search.ts" ]; then
+    echo "Syncing OpenCode tools..."
+    cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
+    cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
+    echo "  Synced: pt-web-search.ts, pt-web-fetch.ts"
+  else
+    read -p "Sync OpenCode tools to ~/.config/opencode/tools/? [y/N] " SYNC_OPENCODE
+    SYNC_OPENCODE=${SYNC_OPENCODE:-N}
+    if [[ "$SYNC_OPENCODE" =~ ^[Yy]$ ]]; then
+      mkdir -p "$OPENCODE_GLOBAL"
+      cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
+      cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
+      echo "  Synced: pt-web-search.ts, pt-web-fetch.ts"
+    else
+      echo "  Skipped."
+    fi
+  fi
 fi
 
 echo "Done! Updated."

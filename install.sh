@@ -29,20 +29,30 @@ fi
 
 # Install skill
 if [ -d "$INSTALL_DIR/skills/playwright-tools" ]; then
-  echo "Installing skill..."
-  mkdir -p "$SKILL_DIR"
-  cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
-  echo "  Installed to: $SKILL_DIR/playwright-tools"
+  read -p "Install skill? [Y/n] " INSTALL_SKILL
+  INSTALL_SKILL=${INSTALL_SKILL:-Y}
+  if [[ "$INSTALL_SKILL" =~ ^[Yy]$ ]]; then
+    mkdir -p "$SKILL_DIR"
+    cp -r "$INSTALL_DIR/skills/playwright-tools" "$SKILL_DIR/playwright-tools"
+    echo "  Installed to: $SKILL_DIR/playwright-tools"
+  else
+    echo "  Skipped skill installation."
+  fi
 fi
 
 # Sync OpenCode tools to global config
 OPENCODE_GLOBAL="$HOME/.config/opencode/tools"
 if [ -d "$INSTALL_DIR/opencode" ]; then
-  mkdir -p "$OPENCODE_GLOBAL"
-  echo "Syncing OpenCode tools..."
-  cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
-  cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
-  echo "  Synced to: $OPENCODE_GLOBAL/"
+  read -p "Sync OpenCode tools to ~/.config/opencode/tools/? [Y/n] " SYNC_OPENCODE
+  SYNC_OPENCODE=${SYNC_OPENCODE:-Y}
+  if [[ "$SYNC_OPENCODE" =~ ^[Yy]$ ]]; then
+    mkdir -p "$OPENCODE_GLOBAL"
+    cp "$INSTALL_DIR/opencode/pt-web-search.ts" "$OPENCODE_GLOBAL/"
+    cp "$INSTALL_DIR/opencode/pt-web-fetch.ts" "$OPENCODE_GLOBAL/"
+    echo "  Synced to: $OPENCODE_GLOBAL/"
+  else
+    echo "  Skipped OpenCode tools sync."
+  fi
 fi
 
 echo ""

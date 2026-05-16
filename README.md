@@ -12,19 +12,13 @@ Uses real browsers to bypass bot detection, CAPTCHAs, and JavaScript rendering.
 curl -sSL https://raw.githubusercontent.com/truongezgg/playwright-tools/main/install.sh | bash
 ```
 
-Or via npm:
-
-```bash
-npm install -g git+https://github.com/truongezgg/playwright-tools.git
-```
-
 **Step 2 — Add skill (optional):**
 
 ```bash
 npx skills add https://github.com/truongezgg/playwright-tools
 ```
 
-**Step 3 — Stealth server (optional, use at your own risk):**
+**Step 3 — Stealth server (optional):**
 
 > **Note:** [CloakBrowser](https://github.com/CloakHQ/cloakbrowser) is a third-party project. Docker is recommended for isolation.
 
@@ -78,18 +72,18 @@ pt fetch https://example.com --format=html
 
 ## Options
 
-| Flag             | Description             | Default          |
-| ---------------- | ----------------------- | ---------------- |
-| `--headed`       | Visible browser         | auto             |
-| `--headless`     | No browser window       | auto             |
-| `--cdp URL`      | CDP server              | `localhost:9222` |
-| `--no-cloak`     | Skip CDP                | false            |
-| `--eval`         | JavaScript extraction   | default          |
-| `--snapshot`     | Accessibility tree      | -                |
-| `--rawsnapshot`  | Raw JSON                | -                |
-| `--format FMT`   | Fetch output: markdown/text/html | `markdown` |
-| `--selector CSS` | Extract element (fetch) | -                |
-| `--timeout MS`   | Load timeout (fetch)    | `15000`          |
+| Flag             | Description                      | Default          |
+| ---------------- | -------------------------------- | ---------------- |
+| `--headed`       | Visible browser                  | auto             |
+| `--headless`     | No browser window                | auto             |
+| `--cdp URL`      | CDP server                       | `localhost:9222` |
+| `--no-cloak`     | Skip CDP                         | false            |
+| `--eval`         | JavaScript extraction            | default          |
+| `--snapshot`     | Accessibility tree               | -                |
+| `--rawsnapshot`  | Raw JSON                         | -                |
+| `--format FMT`   | Fetch output: markdown/text/html | `markdown`       |
+| `--selector CSS` | Extract element (fetch)          | -                |
+| `--timeout MS`   | Load timeout (fetch)             | `15000`          |
 
 ## Stealth Server
 
@@ -141,10 +135,10 @@ ln -s $(pwd)/opencode/pt-web-fetch.ts your-project/.opencode/tools/
 
 **Tools:**
 
-| Tool | Description |
-|------|-------------|
-| `pt-web-search` | Search DDG, Google, Bing via stealth browser |
-| `pt-web-fetch` | Fetch pages with JS rendering, bypass bot detection |
+| Tool            | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `pt-web-search` | Search DDG, Google, Bing via stealth browser        |
+| `pt-web-fetch`  | Fetch pages with JS rendering, bypass bot detection |
 
 These tools wrap the `pt` CLI and are available alongside OpenCode's built-in tools.
 

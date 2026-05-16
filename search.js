@@ -122,7 +122,7 @@ try {
 
   console.error(`Connected: ${source === 'cdp' ? 'Stealth server (CDP)' : 'Local Playwright'}`);
 
-  const page = await getPage(browser);
+  const page = await getPage(browser, source);
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
   console.error(`Searching ${engine}: "${query}"`);

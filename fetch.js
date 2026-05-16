@@ -53,7 +53,7 @@ try {
 
   console.error(`Connected: ${source === 'cdp' ? 'Stealth server (CDP)' : 'Local Playwright'}`);
 
-  const page = await getPage(browser);
+  const page = await getPage(browser, source);
 
   console.error(`Fetching: ${url}`);
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout });

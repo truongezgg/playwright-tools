@@ -19,6 +19,7 @@ if [ -d "$INSTALL_DIR" ]; then
   git pull --quiet
   git stash pop --quiet 2>/dev/null || true
   npm install --production --quiet
+  echo "Updated to: $(git log --oneline -1)"
 else
   # npm -g install: reinstall
   echo "Updating Playwright Tools (npm)..."

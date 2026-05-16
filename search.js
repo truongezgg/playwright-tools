@@ -175,7 +175,6 @@ try {
     }));
 
     respond({ success: true, engine: 'exa', query, limit: count, results });
-    console.error(`Found ${results.length} results`);
 
     await closeBrowser(browser, source);
     process.exit(0);
@@ -264,7 +263,6 @@ try {
     .filter(r => !r.link?.match(/duckduckgo\.com\/.*\.js/));
 
   respond({ success: true, engine, query, limit: count, results });
-  console.error(`Found ${results.length} results`);
 
   await closeBrowser(browser, source);
 
